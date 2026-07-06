@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versions — BREACH ARENA</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100%; background:#14161c; font-family:'Courier New', monospace; color:#b9b5aa; padding:26px 14px 60px; }
+  .head { max-width:760px; margin:0 auto 22px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  h1 { color:#e6e3da; letter-spacing:6px; font-size:24px; }
+  h1 span { color:#d9a86a; }
+  a.back { color:#8f938f; font-size:11px; letter-spacing:2px; text-decoration:none; }
+  a.back:hover { color:#d9a86a; }
+  .note { max-width:760px; margin:0 auto 18px; font-size:10.5px; letter-spacing:1px; color:#8f938f; line-height:1.7;
+    border:1px solid rgba(230,227,218,.18); background:rgba(24,27,34,.6); padding:10px 12px; }
+  .row { max-width:760px; margin:0 auto 10px; background:rgba(24,27,34,.75); border:1px solid rgba(230,227,218,.18);
+    padding:14px 16px; display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+  .row.latest { border-color:#d9a86a; }
+  .vnum { min-width:64px; color:#f0dfc0; font-size:20px; letter-spacing:2px; }
+  .vnum small { display:block; color:#d9a86a; font-size:9px; letter-spacing:2px; margin-top:4px; }
+  .vinfo { flex:1; min-width:220px; }
+  .vtitle { color:#e6e3da; font-size:13px; letter-spacing:2px; margin-bottom:6px; }
+  .vnotes { font-size:11px; line-height:1.7; letter-spacing:.5px; color:#9a9e97; }
+  .acts { display:flex; gap:8px; }
+  .acts a { text-decoration:none; font-family:inherit; font-size:10px; letter-spacing:1.5px; padding:9px 13px; cursor:pointer;
+    background:rgba(24,27,34,.85); color:#b9b5aa; border:1px solid rgba(230,227,218,.28); }
+  .acts a:hover { border-color:#d9a86a; color:#f0dfc0; }
+  .acts a.dl { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.55); }
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>BREACH<span>ARENA</span> — VERSIONS</h1>
+  <a class="back" href="index.html">&larr; BACK TO HOME</a>
+</div>
+<div class="note">
+  EVERY BUILD OF THE GAME IS A SINGLE HTML FILE. DOWNLOAD ANY VERSION AND OPEN IT IN A BROWSER, OR PLAY IT RIGHT HERE.
+  MODS ARE VERSION-LOCKED, SO OLDER MODS NEED THE VERSION THEY WERE MADE FOR.
+</div>
+<div id="list"></div>
+
+<script>
+/* Add a row here each release, then upload the file to the /versions/ folder. Newest first. */
+const VERSIONS = [
+  { v:9, latest:true, title:'ONLINE MULTIPLAYER',
+    notes:'Free peer-to-peer multiplayer: host with a room code and optional password, public games browser, max player limits, host-authoritative combat. Password popup on locked games.' },
+  { v:8, title:'MOD SUPPORT',
+    notes:'The mod loader: install .js mods with version checking, loader identity, client/host/shared sides, dependencies, and a full mod API (custom weapons, maps, menus). Paste-code installer included.' },
+  { v:7, title:'THE BIG POLISH',
+    notes:'Articulated soldier models with real animations, first-person arms and weapon animations, detailed gun models, headshot system (one-shot sniper heads), damage HP bars, hollow multi-level city buildings with roads, bots that climb stairs, tags hidden behind walls.' },
+  { v:6, title:'OPTIONS + CITY',
+    notes:'Options menu (sensitivity, FOV, brightness, screen shake), the CITY map, night lighting with street lamps, 3D sun and moon, camera spike fix, dot crosshair.' },
+  { v:5, title:'LOOT & LOBBY FLOW',
+    notes:'Pickups and loot: 5-slot hotbar, limited ammo, medkits, item spawns, death drops, manual drop. Menu flow with name prompt, players slider, teams with friendly-fire toggle.' },
+  { v:4, title:'THE ARSENAL',
+    notes:'Four weapons — P9 Sidearm, Havoc Shotgun, Longbow Sniper, Riptide LMG — with reload animations, scope fixes, detailed soldier models, and death cams.' },
+  { v:3, title:'MATCH MODES',
+    notes:'Match setup: FFA, Teams, Last One Standing; score or time win conditions; ADS and sniper scope; day/dusk/night; animated menu background; end-of-match scoreboard.' },
+  { v:2, title:'DEATHMATCH',
+    notes:'The original 10-player FFA: humanoid bots with names, line-of-sight AI, killfeed, respawns, and health-on-kill.' },
+];
+
+const list = document.getElementById('list');
+for (const V of VERSIONS){
+  const file = 'versions/breach-arena-v' + V.v + '.html';
+  const row = document.createElement('div');
+  row.className = 'row' + (V.latest ? ' latest' : '');
+  row.innerHTML =
+    '<div class="vnum">v' + V.v + (V.latest ? '<small>LATEST</small>' : '') + '</div>' +
+    '<div class="vinfo"><div class="vtitle">' + V.title + '</div><div class="vnotes">' + V.notes + '</div></div>' +
+    '<div class="acts">' +
+      '<a href="' + (V.latest ? 'play.html' : file) + '">PLAY</a>' +
+      '<a class="dl" href="' + file + '" download>DOWNLOAD</a>' +
+    '</div>';
+  list.appendChild(row);
+}
+</script>
+</body>
+</html>

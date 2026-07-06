@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mods — BREACH ARENA</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ============================================================
+   NGG ONLINE SERVICES — paste the SAME Firebase config you put
+   in play.html. The mod hub needs it to share mods publicly.
+   ============================================================ */
+window.NGG_FIREBASE = null; /* e.g. { apiKey:"...", authDomain:"...", databaseURL:"https://...firebasedatabase.app", projectId:"..." } */
+</script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100%; background:#14161c; font-family:'Courier New', monospace; color:#b9b5aa; padding:22px 14px 70px; }
+  .head { max-width:1040px; margin:0 auto 16px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  h1 { color:#e6e3da; letter-spacing:5px; font-size:22px; }
+  h1 span { color:#d9a86a; }
+  a.back { color:#8f938f; font-size:11px; letter-spacing:2px; text-decoration:none; }
+  a.back:hover { color:#d9a86a; }
+  .bar { max-width:1040px; margin:0 auto 16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .txt, select { font-family:inherit; font-size:11px; letter-spacing:1px; color:#dcd8cc; background:rgba(24,27,34,.85);
+    border:1px solid rgba(230,227,218,.25); padding:9px 10px; outline:none; }
+  .txt:focus, select:focus { border-color:#d9a86a; }
+  #q { flex:1; min-width:160px; }
+  .btn { font-family:inherit; font-size:11px; letter-spacing:1.5px; padding:10px 14px; cursor:pointer;
+    background:rgba(24,27,34,.85); color:#b9b5aa; border:1px solid rgba(230,227,218,.28); }
+  .btn:hover { border-color:#d9a86a; color:#f0dfc0; }
+  .btn.gold { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.55); }
+  .banner { max-width:1040px; margin:0 auto 16px; font-size:10.5px; letter-spacing:1px; line-height:1.8; color:#d9a86a;
+    border:1px solid rgba(217,168,106,.4); background:rgba(50,42,28,.3); padding:12px 14px; }
+  #grid { max-width:1040px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
+  .card { background:rgba(24,27,34,.75); border:1px solid rgba(230,227,218,.18); padding:12px; display:flex; gap:12px; cursor:pointer; }
+  .card:hover { border-color:#d9a86a; }
+  .icon { width:64px; height:64px; flex:none; background:#20242b; border:1px solid rgba(230,227,218,.2); object-fit:cover;
+    display:flex; align-items:center; justify-content:center; color:#4b5058; font-size:22px; }
+  .cbody { flex:1; min-width:0; }
+  .ctitle { color:#e6e3da; font-size:13px; letter-spacing:1.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cby { color:#6d7178; font-size:9.5px; letter-spacing:1px; margin:2px 0 5px; }
+  .cshort { font-size:10.5px; line-height:1.55; color:#9a9e97; max-height:34px; overflow:hidden; }
+  .badges { margin-top:7px; display:flex; gap:5px; flex-wrap:wrap; }
+  .bdg { font-size:8.5px; letter-spacing:1px; padding:2px 6px; border:1px solid rgba(230,227,218,.3); color:#b9b5aa; }
+  .bdg.gold { border-color:rgba(217,168,106,.6); color:#e8c98f; }
+  .cstats { margin-top:6px; font-size:9px; letter-spacing:1px; color:#6d7178; }
+  .empty { max-width:1040px; margin:30px auto; text-align:center; font-size:11px; letter-spacing:2px; color:#6d7178; }
+
+  .ovl { position:fixed; inset:0; background:rgba(10,12,16,.82); display:flex; align-items:flex-start; justify-content:center;
+    overflow-y:auto; padding:30px 12px; z-index:20; }
+  .panel { width:min(720px, 96vw); background:#191c23; border:1px solid rgba(230,227,218,.25); padding:20px; }
+  .panel h2 { color:#e6e3da; letter-spacing:3px; font-size:16px; margin-bottom:4px; }
+  .sub { color:#8f938f; font-size:10px; letter-spacing:1.5px; margin-bottom:14px; }
+  .lbl { font-size:9.5px; letter-spacing:1.5px; color:#8f938f; margin:12px 0 5px; }
+  .full { width:100%; }
+  textarea.txt { min-height:120px; resize:vertical; line-height:1.6; }
+  .row2 { display:flex; gap:8px; flex-wrap:wrap; }
+  .row2 > * { flex:1; min-width:130px; }
+  .actions { margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .md { font-size:11.5px; line-height:1.75; color:#adb1a9; letter-spacing:.3px; word-wrap:break-word; }
+  .md h1,.md h2,.md h3 { color:#e6e3da; letter-spacing:2px; margin:14px 0 6px; }
+  .md h1 { font-size:16px; } .md h2 { font-size:14px; } .md h3 { font-size:12px; }
+  .md p { margin:8px 0; }
+  .md code { background:rgba(24,27,34,.9); border:1px solid rgba(230,227,218,.18); padding:1px 5px; color:#d9c9a0; }
+  .md pre { background:rgba(24,27,34,.9); border:1px solid rgba(230,227,218,.18); padding:10px; overflow-x:auto; margin:8px 0; }
+  .md pre code { border:0; padding:0; }
+  .md ul { margin:8px 0 8px 20px; }
+  .md a { color:#d9a86a; }
+  .vrow { border:1px solid rgba(230,227,218,.18); background:rgba(24,27,34,.6); padding:10px 12px; margin-top:8px;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .vname { color:#e6e3da; font-size:12px; letter-spacing:1px; }
+  .vlog { flex:1; min-width:160px; font-size:10px; color:#8f938f; letter-spacing:.5px; }
+  .status { min-height:16px; font-size:10px; letter-spacing:1px; color:#d9a86a; margin-top:10px; }
+  .status.err { color:#c96a5a; }
+  .hidden { display:none !important; }
+  .iconprev { width:96px; height:96px; border:1px solid rgba(230,227,218,.25); background:#20242b; object-fit:cover; display:block; }
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>BREACH<span>ARENA</span> — MODS</h1>
+  <a class="back" href="index.html">&larr; BACK TO HOME</a>
+</div>
+
+<div id="setup" class="banner hidden">
+  MOD SHARING ISN'T CONNECTED YET. THE SITE OWNER NEEDS TO PASTE A FREE FIREBASE CONFIG AT THE TOP OF THIS FILE
+  (SAME ONE AS PLAY.HTML). UNTIL THEN, MODS CAN STILL BE INSTALLED IN-GAME FROM .JS FILES.
+</div>
+
+<div class="bar">
+  <input class="txt" id="q" placeholder="SEARCH MODS&#8230;" autocomplete="off">
+  <select id="f-ver"><option value="">ALL GAME VERSIONS</option></select>
+  <select id="f-loader"><option value="">ALL LOADERS</option></select>
+  <select id="f-side">
+    <option value="">ANY SIDE</option>
+    <option value="client">CLIENT</option>
+    <option value="host">HOST</option>
+    <option value="shared">SHARED</option>
+  </select>
+  <select id="f-sort">
+    <option value="pop">MOST DOWNLOADED</option>
+    <option value="upd">RECENTLY UPDATED</option>
+    <option value="new">NEWEST</option>
+  </select>
+  <button class="btn gold" id="btn-add">+ ADD MOD</button>
+</div>
+
+<div id="grid"></div>
+<div class="empty hidden" id="empty">NO MODS MATCH — BE THE FIRST TO PUBLISH ONE</div>
+
+<!-- ===== detail overlay ===== -->
+<div class="ovl hidden" id="ov-detail"><div class="panel">
+  <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
+    <img class="iconprev" id="d-icon" alt="">
+    <div style="flex:1; min-width:200px;">
+      <h2 id="d-title"></h2>
+      <div class="sub" id="d-by"></div>
+      <div class="badges" id="d-badges"></div>
+      <div class="cstats" id="d-stats" style="margin-top:8px;"></div>
+    </div>
+  </div>
+  <div class="lbl">ABOUT</div>
+  <div class="md" id="d-md"></div>
+  <div class="lbl">VERSIONS</div>
+  <div id="d-versions"></div>
+  <div class="actions">
+    <button class="btn gold hidden" id="d-addver">+ ADD VERSION</button>
+    <button class="btn hidden" id="d-edit">EDIT DETAILS</button>
+    <button class="btn hidden" id="d-del" style="border-color:rgba(201,106,90,.5); color:#c98a7a;">DELETE</button>
+    <button class="btn" id="d-close">CLOSE</button>
+  </div>
+</div></div>
+
+<!-- ===== publish / edit overlay ===== -->
+<div class="ovl hidden" id="ov-pub"><div class="panel">
+  <h2 id="p-head">PUBLISH A MOD</h2>
+  <div class="sub">NO ACCOUNT NEEDED — THIS BROWSER REMEMBERS YOUR PROJECTS SO YOU CAN UPDATE THEM LATER.</div>
+
+  <div class="lbl">ICON (SQUARE IMAGE, OPTIONAL)</div>
+  <div class="row2" style="align-items:center;">
+    <img class="iconprev" id="p-iconprev" alt="" style="flex:none;">
+    <button class="btn" id="p-iconbtn" style="flex:none;">CHOOSE IMAGE</button>
+    <input type="file" id="p-iconfile" accept="image/*" class="hidden">
+  </div>
+  <div class="lbl">MOD TITLE</div>
+  <input class="txt full" id="p-title" maxlength="40" autocomplete="off">
+  <div class="lbl">YOUR NAME (SHOWN AS AUTHOR)</div>
+  <input class="txt full" id="p-author" maxlength="24" autocomplete="off">
+  <div class="lbl">SHORT DESCRIPTION (SHOWN ON THE CARD)</div>
+  <input class="txt full" id="p-short" maxlength="140" autocomplete="off">
+  <div class="lbl">FULL DESCRIPTION — MARKDOWN SUPPORTED (# HEADERS, **BOLD**, *ITALIC*, `CODE`, - LISTS, [LINKS](URL))</div>
+  <textarea class="txt full" id="p-long"></textarea>
+  <button class="btn" id="p-preview" style="margin-top:6px;">PREVIEW</button>
+  <div class="md hidden" id="p-mdprev" style="border:1px solid rgba(230,227,218,.18); padding:10px; margin-top:8px;"></div>
+
+  <div id="p-verblock">
+    <div class="lbl" style="margin-top:20px; color:#d9a86a;">FIRST VERSION</div>
+    <div class="row2">
+      <div><div class="lbl">MOD FILE (.JS)</div><button class="btn full" id="p-filebtn">CHOOSE FILE</button>
+        <input type="file" id="p-file" accept=".js" class="hidden"><div class="sub" id="p-fname" style="margin-top:5px;"></div></div>
+      <div><div class="lbl">VERSION NAME</div><input class="txt full" id="p-vname" maxlength="20" placeholder="1.0" autocomplete="off"></div>
+    </div>
+    <div class="row2">
+      <div><div class="lbl">FOR GAME VERSION</div><input class="txt full" id="p-gamever" maxlength="3" placeholder="9" autocomplete="off"></div>
+      <div><div class="lbl">MOD LOADER</div><input class="txt full" id="p-loader" maxlength="20" value="default" autocomplete="off"></div>
+      <div><div class="lbl">SIDE</div><select class="full" id="p-side">
+        <option value="client">CLIENT (COSMETIC)</option><option value="host">HOST (RULES)</option><option value="shared">SHARED (BOTH NEED IT)</option>
+      </select></div>
+    </div>
+    <div class="lbl">VERSION CHANGELOG (SHORT)</div>
+    <input class="txt full" id="p-vlog" maxlength="140" autocomplete="off">
+  </div>
+
+  <div class="status" id="p-status"></div>
+  <div class="actions">
+    <button class="btn gold" id="p-publish">PUBLISH</button>
+    <button class="btn" id="p-cancel">CANCEL</button>
+  </div>
+</div></div>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const escS = t => String(t == null ? '' : t).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+/* ---------- firebase ---------- */
+let db = null;
+try {
+  if (window.NGG_FIREBASE && window.NGG_FIREBASE.databaseURL){
+    firebase.initializeApp(window.NGG_FIREBASE);
+    db = firebase.database();
+  }
+} catch(e){ console.warn(e); }
+if (!db){ $('setup').classList.remove('hidden'); }
+
+/* ---------- local identity ---------- */
+const store = {
+  get k(){ try { return JSON.parse(localStorage.getItem('ngg_mod_keys') || '{}'); } catch(e){ return {}; } },
+  set k(v){ try { localStorage.setItem('ngg_mod_keys', JSON.stringify(v)); } catch(e){} },
+  get author(){ try { return localStorage.getItem('ngg_author') || ''; } catch(e){ return ''; } },
+  set author(v){ try { localStorage.setItem('ngg_author', v); } catch(e){} },
+};
+const randKey = n => Array.from({length:n}, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random()*31)]).join('');
+
+/* ---------- tiny markdown ---------- */
+function md(src){
+  let t = escS(src);
+  t = t.replace(/```([\s\S]*?)```/g, (m, c) => '<pre><code>' + c.trim() + '</code></pre>');
+  t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  t = t.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+  t = t.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+  t = t.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  t = t.replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/((?:^- .*(?:\n|$))+)/gm, m => '<ul>' + m.trim().split(/\n/).map(l => '<li>' + l.replace(/^- /,'') + '</li>').join('') + '</ul>');
+  return t.split(/\n{2,}/).map(p => /^<(h\d|ul|pre)/.test(p.trim()) ? p : '<p>' + p.replace(/\n/g,'<br>') + '</p>').join('');
+}
+
+/* ---------- data ---------- */
+let MODS = [], DL = {}, current = null, editMode = null; /* editMode: null=create, 'edit'=details, 'ver'=add version */
+
+function load(){
+  if (!db){ render(); return; }
+  Promise.all([ db.ref('mods').once('value'), db.ref('downloads').once('value') ]).then(([ms, ds]) => {
+    DL = ds.val() || {};
+    MODS = [];
+    ms.forEach(ch => {
+      const v = ch.val();
+      if (v && !v.deleted && v.title) MODS.push(v);
+    });
+    fillFilters();
+    render();
+  }).catch(e => { console.warn(e); $('setup').classList.remove('hidden'); render(); });
+}
+const versionsOf = m => Object.values(m.versions || {}).sort((a,b) => (b.t||0) - (a.t||0));
+
+function fillFilters(){
+  const vers = new Set(), loaders = new Set();
+  MODS.forEach(m => versionsOf(m).forEach(v => { if (v.gameVersion) vers.add(String(v.gameVersion)); if (v.loader) loaders.add(v.loader); }));
+  const fill = (el, vals, pre) => {
+    const cur = el.value;
+    el.innerHTML = '<option value="">' + pre + '</option>' + [...vals].sort((a,b)=>String(b).localeCompare(String(a),undefined,{numeric:true}))
+      .map(v => '<option value="' + escS(v) + '">' + escS(String(v).toUpperCase()) + '</option>').join('');
+    el.value = cur;
+  };
+  fill($('f-ver'), [...vers].map(v => 'v'+v), 'ALL GAME VERSIONS');
+  fill($('f-loader'), loaders, 'ALL LOADERS');
+}
+
+function render(){
+  const q = $('q').value.trim().toLowerCase();
+  const fv = $('f-ver').value.replace('v',''), fl = $('f-loader').value, fs = $('f-side').value, sort = $('f-sort').value;
+  let list = MODS.filter(m => {
+    if (q && !((m.title||'').toLowerCase().includes(q) || (m.short||'').toLowerCase().includes(q))) return false;
+    const vs = versionsOf(m);
+    if (fv && !vs.some(v => String(v.gameVersion) === fv)) return false;
+    if (fl && !vs.some(v => v.loader === fl)) return false;
+    if (fs && !vs.some(v => v.side === fs)) return false;
+    return true;
+  });
+  list.sort((a,b) => sort === 'pop' ? (DL[b.id]||0) - (DL[a.id]||0)
+    : sort === 'upd' ? (b.updated||0) - (a.updated||0)
+    : (b.created||0) - (a.created||0));
+  const grid = $('grid');
+  grid.innerHTML = '';
+  $('empty').classList.toggle('hidden', !!list.length || !db);
+  for (const m of list){
+    const vs = versionsOf(m);
+    const gvs = [...new Set(vs.map(v => 'v'+v.gameVersion))].slice(0,4).join(' ');
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      (m.icon ? '<img class="icon" src="' + m.icon + '" alt="">' : '<div class="icon">?</div>') +
+      '<div class="cbody"><div class="ctitle">' + escS(m.title) + '</div>' +
+      '<div class="cby">BY ' + escS(m.author || 'ANONYMOUS') + '</div>' +
+      '<div class="cshort">' + escS(m.short || '') + '</div>' +
+      '<div class="badges">' +
+        (vs[0] ? '<span class="bdg gold">' + escS((vs[0].loader||'default').toUpperCase()) + '</span><span class="bdg">' + escS((vs[0].side||'client').toUpperCase()) + '</span>' : '') +
+        (gvs ? '<span class="bdg">' + escS(gvs.toUpperCase()) + '</span>' : '') +
+      '</div>' +
+      '<div class="cstats">&#8681; ' + (DL[m.id]||0) + ' &middot; UPDATED ' + (m.updated ? new Date(m.updated).toLocaleDateString() : '?') + '</div></div>';
+    card.addEventListener('click', () => openDetail(m));
+    grid.appendChild(card);
+  }
+}
+['q','f-ver','f-loader','f-side','f-sort'].forEach(id => { $(id).addEventListener('input', render); $(id).addEventListener('change', render); });
+
+/* ---------- detail ---------- */
+function openDetail(m){
+  current = m;
+  $('d-icon').src = m.icon || '';
+  $('d-icon').style.visibility = m.icon ? 'visible' : 'hidden';
+  $('d-title').textContent = m.title;
+  $('d-by').textContent = 'BY ' + (m.author || 'ANONYMOUS').toUpperCase();
+  $('d-stats').textContent = '\u21E9 ' + (DL[m.id]||0) + ' DOWNLOADS \u00B7 CREATED ' + new Date(m.created||0).toLocaleDateString() + ' \u00B7 UPDATED ' + new Date(m.updated||0).toLocaleDateString();
+  const vs = versionsOf(m);
+  $('d-badges').innerHTML = vs[0] ? '<span class="bdg gold">' + escS((vs[0].loader||'default').toUpperCase()) + '</span><span class="bdg">' + escS((vs[0].side||'client').toUpperCase()) + '</span>' : '';
+  $('d-md').innerHTML = md(m.long || m.short || '');
+  const box = $('d-versions');
+  box.innerHTML = vs.length ? '' : '<div class="sub">NO VERSIONS YET</div>';
+  vs.forEach(v => {
+    const row = document.createElement('div');
+    row.className = 'vrow';
+    row.innerHTML = '<div><div class="vname">' + escS(v.name || '?') + '</div>' +
+      '<div class="badges" style="margin-top:4px;"><span class="bdg">GAME v' + escS(String(v.gameVersion||'?')) + '</span>' +
+      '<span class="bdg">' + escS((v.loader||'default').toUpperCase()) + '</span><span class="bdg">' + escS((v.side||'client').toUpperCase()) + '</span></div></div>' +
+      '<div class="vlog">' + escS(v.changelog || '') + '</div>';
+    const dl = document.createElement('button');
+    dl.className = 'btn gold';
+    dl.textContent = 'DOWNLOAD';
+    dl.addEventListener('click', () => downloadVersion(m, v));
+    row.appendChild(dl);
+    box.appendChild(row);
+  });
+  const mine = !!store.k[m.id];
+  $('d-addver').classList.toggle('hidden', !mine);
+  $('d-edit').classList.toggle('hidden', !mine);
+  $('d-del').classList.toggle('hidden', !mine);
+  $('ov-detail').classList.remove('hidden');
+}
+$('d-close').addEventListener('click', () => $('ov-detail').classList.add('hidden'));
+
+function downloadVersion(m, v){
+  const blob = new Blob([v.file || ''], { type:'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = v.fname || ((m.id||'mod') + '-' + (v.name||'1.0') + '.js');
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  if (db) db.ref('downloads/' + m.id).transaction(n => (n||0) + 1).then(() => { DL[m.id] = (DL[m.id]||0) + 1; render(); });
+}
+
+/* ---------- publish / edit ---------- */
+let iconData = '', fileData = null;
+$('btn-add').addEventListener('click', () => {
+  if (!db){ alert('Mod sharing is not connected yet (Firebase config missing).'); return; }
+  editMode = null; iconData = ''; fileData = null;
+  $('p-head').textContent = 'PUBLISH A MOD';
+  ['p-title','p-short','p-long','p-vname','p-vlog','p-fname'].forEach(id => $(id).value !== undefined ? $(id).value = '' : $(id).textContent = '');
+  $('p-fname').textContent = '';
+  $('p-gamever').value = '9';
+  $('p-loader').value = 'default';
+  $('p-side').value = 'client';
+  $('p-author').value = store.author;
+  $('p-iconprev').src = ''; $('p-iconprev').style.visibility = 'hidden';
+  $('p-mdprev').classList.add('hidden');
+  $('p-verblock').classList.remove('hidden');
+  $('p-status').textContent = '';
+  $('ov-pub').classList.remove('hidden');
+});
+$('d-edit').addEventListener('click', () => {
+  if (!current) return;
+  editMode = 'edit'; fileData = null;
+  iconData = current.icon || '';
+  $('p-head').textContent = 'EDIT: ' + current.title;
+  $('p-title').value = current.title || '';
+  $('p-author').value = current.author || store.author;
+  $('p-short').value = current.short || '';
+  $('p-long').value = current.long || '';
+  $('p-iconprev').src = iconData; $('p-iconprev').style.visibility = iconData ? 'visible' : 'hidden';
+  $('p-mdprev').classList.add('hidden');
+  $('p-verblock').classList.add('hidden');
+  $('p-status').textContent = '';
+  $('ov-detail').classList.add('hidden');
+  $('ov-pub').classList.remove('hidden');
+});
+$('d-addver').addEventListener('click', () => {
+  if (!current) return;
+  editMode = 'ver'; fileData = null;
+  $('p-head').textContent = 'ADD VERSION: ' + current.title;
+  $('p-verblock').classList.remove('hidden');
+  $('p-vname').value = ''; $('p-vlog').value = ''; $('p-fname').textContent = '';
+  $('p-gamever').value = '9'; $('p-loader').value = 'default'; $('p-side').value = 'client';
+  $('p-status').textContent = '';
+  document.querySelectorAll('#ov-pub .lbl, #p-title, #p-author, #p-short, #p-long, #p-preview, #p-iconbtn, #p-iconprev, #p-mdprev').forEach(el => {
+    if (!$('p-verblock').contains(el)) el.classList.add('hidden');
+  });
+  $('ov-detail').classList.add('hidden');
+  $('ov-pub').classList.remove('hidden');
+});
+$('p-cancel').addEventListener('click', () => {
+  $('ov-pub').classList.add('hidden');
+  document.querySelectorAll('#ov-pub .hidden').forEach(el => { if (el.id !== 'p-iconfile' && el.id !== 'p-file' && el.id !== 'p-mdprev') el.classList.remove('hidden'); });
+});
+$('p-preview').addEventListener('click', () => {
+  $('p-mdprev').innerHTML = md($('p-long').value);
+  $('p-mdprev').classList.toggle('hidden');
+});
+$('p-iconbtn').addEventListener('click', () => $('p-iconfile').click());
+$('p-iconfile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = c.height = 96;
+    const x = c.getContext('2d');
+    const s = Math.min(img.width, img.height);
+    x.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, 96, 96);
+    iconData = c.toDataURL('image/png');
+    if (iconData.length > 80000) iconData = c.toDataURL('image/jpeg', .8);
+    $('p-iconprev').src = iconData; $('p-iconprev').style.visibility = 'visible';
+  };
+  img.src = URL.createObjectURL(f);
+  e.target.value = '';
+});
+$('p-filebtn').addEventListener('click', () => $('p-file').click());
+$('p-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 400000){ $('p-status').textContent = 'FILE TOO BIG (400KB MAX)'; $('p-status').className = 'status err'; return; }
+  const r = new FileReader();
+  r.onload = () => { fileData = { text:String(r.result), name:f.name }; $('p-fname').textContent = f.name + ' \u00B7 ' + Math.round(f.size/102.4)/10 + 'KB'; };
+  r.readAsText(f);
+  e.target.value = '';
+});
+
+function versionPayload(){
+  return {
+    name: $('p-vname').value.trim() || '1.0',
+    changelog: $('p-vlog').value.trim(),
+    gameVersion: parseInt($('p-gamever').value, 10) || 9,
+    loader: ($('p-loader').value.trim() || 'default').toLowerCase(),
+    side: $('p-side').value,
+    file: fileData.text,
+    fname: fileData.name,
+    t: Date.now(),
+  };
+}
+$('p-publish').addEventListener('click', () => {
+  const st = $('p-status'); st.className = 'status';
+  if (!db){ st.textContent = 'NOT CONNECTED'; return; }
+  if (editMode === 'ver'){
+    if (!fileData){ st.className='status err'; st.textContent = 'CHOOSE THE MOD .JS FILE'; return; }
+    st.textContent = 'UPLOADING\u2026';
+    const upd = { updated: Date.now(), _k: store.k[current.id] };
+    db.ref('mods/' + current.id + '/versions').push(versionPayload())
+      .then(() => db.ref('mods/' + current.id).update(upd))
+      .then(() => { $('ov-pub').classList.add('hidden'); $('p-cancel').click(); load(); })
+      .catch(e => { st.className='status err'; st.textContent = 'UPLOAD FAILED: ' + e.message; });
+    return;
+  }
+  const title = $('p-title').value.trim();
+  if (!title){ st.className='status err'; st.textContent = 'TITLE REQUIRED'; return; }
+  const author = $('p-author').value.trim() || 'ANONYMOUS';
+  store.author = author;
+  if (editMode === 'edit'){
+    st.textContent = 'SAVING\u2026';
+    db.ref('mods/' + current.id).update({ title, author, short: $('p-short').value.trim(),
+      long: $('p-long').value, icon: iconData || '', updated: Date.now(), _k: store.k[current.id] })
+      .then(() => { $('ov-pub').classList.add('hidden'); load(); })
+      .catch(e => { st.className='status err'; st.textContent = 'SAVE FAILED: ' + e.message; });
+    return;
+  }
+  if (!fileData){ st.className='status err'; st.textContent = 'CHOOSE THE MOD .JS FILE (FIRST VERSION)'; return; }
+  st.textContent = 'PUBLISHING\u2026';
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24) + '-' + randKey(4);
+  const key = randKey(20);
+  const proj = { id, _k:key, title, author, short: $('p-short').value.trim(), long: $('p-long').value,
+    icon: iconData || '', created: Date.now(), updated: Date.now(), versions: {} };
+  db.ref('mods/' + id).set(proj)
+    .then(() => db.ref('mods/' + id + '/versions').push(versionPayload()))
+    .then(() => {
+      const k = store.k; k[id] = key; store.k = k;
+      $('ov-pub').classList.add('hidden');
+      load();
+    })
+    .catch(e => { st.className='status err'; st.textContent = 'PUBLISH FAILED: ' + e.message; });
+});
+
+$('d-del').addEventListener('click', () => {
+  if (!current || !confirm('Delete "' + current.title + '" from the mod hub?')) return;
+  db.ref('mods/' + current.id).set({ id: current.id, _k: store.k[current.id], deleted: true, title:'', updated: Date.now() })
+    .then(() => { $('ov-detail').classList.add('hidden'); load(); });
+});
+
+load();
+})();
+</script>
+</body>
+</html>

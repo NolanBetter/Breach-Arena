@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BREACH ARENA — Nolan Grayson Games</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#14161c; font-family:'Courier New', monospace; }
+  #bg { position:fixed; inset:0; width:100%; height:100%; border:0; pointer-events:none; filter:saturate(.95); }
+  #scrim { position:fixed; inset:0; background:radial-gradient(ellipse at center, rgba(16,18,24,.35) 0%, rgba(12,14,18,.78) 100%); }
+  #wrap { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  h1 { color:#e6e3da; font-size:clamp(30px, 7vw, 58px); letter-spacing:10px; font-weight:700; text-shadow:0 2px 18px rgba(0,0,0,.6); }
+  h1 span { color:#d9a86a; }
+  .tag { color:#8f938f; font-size:11px; letter-spacing:4px; margin:-4px 0 18px; }
+  a.btn { display:block; width:min(320px, 78vw); text-align:center; text-decoration:none; font-family:inherit; letter-spacing:3px; cursor:pointer;
+    background:rgba(24,27,34,.78); color:#b9b5aa; border:1px solid rgba(230,227,218,.3); padding:13px 0; font-size:13px;
+    transition:border-color .15s, color .15s, background .15s; backdrop-filter:blur(3px); }
+  a.btn:hover { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.55); }
+  a.btn.big { font-size:20px; padding:20px 0; letter-spacing:6px; color:#f0dfc0; border-color:#d9a86a; background:rgba(50,42,28,.6); }
+  a.btn.big:hover { background:rgba(70,58,38,.7); }
+  .foot { position:fixed; bottom:14px; width:100%; text-align:center; color:#5d6166; font-size:10px; letter-spacing:2px; }
+</style>
+</head>
+<body>
+<iframe id="bg" src="play.html?bg=1" title="" tabindex="-1"></iframe>
+<div id="scrim"></div>
+<div id="wrap">
+  <h1>BREACH<span>ARENA</span></h1>
+  <div class="tag">A NOLAN GRAYSON GAMES PROJECT</div>
+  <a class="btn" href="mods.html">MODS</a>
+  <a class="btn big" href="play.html">PLAY</a>
+  <a class="btn" href="versions.html">VERSIONS</a>
+</div>
+<div class="foot">RUNS IN YOUR BROWSER &middot; DESKTOP &amp; MOBILE &middot; FREE MULTIPLAYER</div>
+</body>
+</html>
