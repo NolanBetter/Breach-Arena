@@ -403,7 +403,15 @@
    Powers the PUBLIC GAMES list. Leave as null to disable it
    (joining with a room code always works either way).
    ============================================================ */
-window.NGG_FIREBASE = null; /* e.g. { apiKey:"...", authDomain:"...", databaseURL:"https://...firebasedatabase.app", projectId:"..." } */
+window.NGG_FIREBASE = {
+  apiKey: "AIzaSyChyQvE-7efCQtTCPuwuIAPiHEKKt5IE2M",
+  authDomain: "breach-arena-46fa3.firebaseapp.com",
+  databaseURL: "https://breach-arena-46fa3-default-rtdb.firebaseio.com",
+  projectId: "breach-arena-46fa3",
+  storageBucket: "breach-arena-46fa3.firebasestorage.app",
+  messagingSenderId: "231754072759",
+  appId: "1:231754072759:web:ec1bdd2f2b147c9fe48332"
+};
 </script>
 <script>
 (() => {
@@ -3165,14 +3173,15 @@ function netShutdown(notify){
 /* ---------- public server list (Firebase, optional) ---------- */
 let fdb = null, fbLobbyRef = null, fbBeat = null, srvIv = null, srvTarget = null;
 function fbInit(){
-  if (fdb !== null) return fdb;
+  if (fdb) return fdb;
   try {
-    if (window.NGG_FIREBASE && window.firebase && window.NGG_FIREBASE.databaseURL){
-      firebase.initializeApp(window.NGG_FIREBASE);
+    if (window.NGG_FIREBASE && window.NGG_FIREBASE.databaseURL && window.firebase && firebase.database){
+      if (!firebase.apps.length) firebase.initializeApp(window.NGG_FIREBASE);
       fdb = firebase.database();
-    } else fdb = false;
-  } catch(e){ console.warn('[fb]', e); fdb = false; }
-  return fdb;
+      return fdb;
+    }
+  } catch(e){ console.warn('[fb]', e); }
+  return null;   // SDK not ready yet — try again on the next call, don't give up
 }
 function escS(t){ return String(t).replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
 function fbLobbyData(){
@@ -3204,10 +3213,17 @@ function srvOpen(){
     refreshServers();
   }, 6000);
 }
+let _fbWaited = 0;
 function refreshServers(){
   const box = $('srvlist');
   const db = fbInit();
-  if (!db){ box.innerHTML = '<div class="srvempty">SERVER LIST NOT CONFIGURED \u2014 JOIN WITH A CODE BELOW</div>'; return; }
+  if (!db){
+    /* SDK still loading (or truly absent): keep trying for a few seconds */
+    if (_fbWaited++ < 20){ box.innerHTML = '<div class="srvempty">CONNECTING TO SERVER LIST\u2026</div>'; setTimeout(refreshServers, 250); return; }
+    box.innerHTML = '<div class="srvempty">SERVER LIST UNAVAILABLE \u2014 JOIN WITH A CODE BELOW</div>';
+    return;
+  }
+  _fbWaited = 0;
   db.ref('lobbies').orderByChild('t').limitToLast(30).once('value').then(snap=>{
     const now = Date.now(), rows = [];
     snap.forEach(ch=>{ const L = ch.val(); if (L && L.code && (now - (L.t || 0)) < 70000) rows.push(L); });
