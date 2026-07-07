@@ -113,6 +113,8 @@
   .ogbtn { flex:1; min-width:70px; font-family:inherit; font-size:11.5px; letter-spacing:1.5px; padding:9px 6px; background:rgba(24,27,34,.75); color:#b9b5aa; border:1px solid rgba(230,227,218,.22); cursor:pointer; }
   .ogbtn.sel { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.6); }
   .modwarn { font-size:10.5px; letter-spacing:1px; color:#d9a86a; border:1px solid rgba(217,168,106,.4); padding:8px 10px; margin-bottom:10px; background:rgba(50,42,28,.35); }
+  .modhub { font-size:10px; letter-spacing:1px; line-height:1.7; color:#9fd0e8; border:1px solid rgba(159,208,232,.4); padding:8px 10px; margin-bottom:10px; background:rgba(28,40,52,.3); }
+  .modhub a { color:#d9a86a; word-break:break-all; }
   .modrow { display:flex; align-items:center; gap:8px; padding:9px 10px; margin-bottom:6px; background:rgba(24,27,34,.75); border:1px solid rgba(230,227,218,.18); }
   .modrow .mname { flex:1; min-width:0; text-align:left; }
   .modrow .mtitle { font-size:12px; letter-spacing:1.2px; color:#e6e3da; }
@@ -219,6 +221,7 @@
   <h2>MODS</h2>
   <p class="sub" id="mods-sub"></p>
   <div class="panel">
+    <div class="modhub">BROWSE &amp; DOWNLOAD MODS ONLINE, THEN INSTALL THEM HERE WITH + ADD MOD FILE.<br>OFFICIAL HUB: <a href="https://www.nolangraysongames.com/Breach-Arena/mods.html" target="_blank" rel="noopener">nolangraysongames.com/Breach-Arena/mods.html</a></div>
     <div class="modwarn">MODS ARE JAVASCRIPT WITH FULL ACCESS TO THE GAME PAGE. ONLY INSTALL FILES YOU TRUST.</div>
     <div id="mods-list"></div>
   </div>
@@ -296,13 +299,6 @@
 <div class="overlay glass hidden" id="create">
   <h2>CREATE A GAME</h2>
   <div id="create-panel" class="panel">
-    <div class="og"><div class="oglabel">MAX PLAYERS (ONLINE)</div>
-      <div class="ogbtns" id="og-maxonline">
-        <button class="ogbtn" data-v="2">2</button>
-        <button class="ogbtn" data-v="4">4</button>
-        <button class="ogbtn sel" data-v="8">8</button>
-        <button class="ogbtn" data-v="12">12</button>
-      </div></div>
     <div class="og"><div class="oglabel">LOBBY PASSWORD (OPTIONAL)</div>
       <input class="txt" id="create-pass" maxlength="16" autocomplete="off" placeholder="&#8212;&#8212;"></div>
     <div class="og"><div class="oglabel">MAP</div>
@@ -485,7 +481,6 @@ wireGroup('og-tod','tod');
 wireGroup('og-pickups','pickups', v=>v==='on');
 wireGroup('og-ammo','limitedAmmo', v=>v==='on');
 wireGroup('og-ff','ff', v=>v==='on');
-wireGroup('og-maxonline','maxOnline', v=>+v);
 hookRange($('players-slider'), v => {
   cfg.players = v;
   $('players-val').textContent = cfg.players + ' (YOU + ' + (cfg.players-1) + ' BOT' + (cfg.players-1===1?'':'S') + ')';
@@ -516,7 +511,6 @@ function syncCreateUI(){
   setGroup('og-ammo', cfg.limitedAmmo?'on':'off');
   setGroup('og-ff', cfg.ff?'on':'off');
   $('players-slider').value = cfg.players;
-  setGroup('og-maxonline', String(cfg.maxOnline || 8));
   refreshCreate();
 }
 
@@ -2675,6 +2669,8 @@ function netHostStart(pass){
       rp.hp = 100; rp.alive = true; rp.kills = 0; rp.deaths = 0; rp.regenT = 0;
       rp.team = cfg.mode === 'tdm' ? ((ti++ % 2) ? 'B' : 'A') : null;
       rp.mesh.visible = true;
+      rp.mesh.rotation.x = 0; rp.mesh.rotation.z = 0;
+      if (rp.tag) rp.tag.visible = true;
       netSendTo(rp, hostWelcomeMsg(sp, rp.team));
     }
     showRoomChip();
@@ -2691,6 +2687,10 @@ function netHostStart(pass){
   net.peer.on('error', err=>{
     if (net.mode !== 'host') return;
     if (err && err.type === 'unavailable-id'){ const ps = net.pass; netShutdown(); netHostStart(ps); }
+    else if (err && (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'socket-closed')){
+      showRoomChip('CONNECTION BLOCKED \u2014 DISABLE AD BLOCKER / BRAVE SHIELDS');
+      showToast('MULTIPLAYER BLOCKED: turn off your ad blocker or Brave Shields for this site, then retry');
+    }
     else hideRoomChip();
   });
   net.peer.on('connection', c=>{
@@ -2716,7 +2716,7 @@ function hostMsg(c, d){
   if (d.t === 'hello'){
     if ((d.ver|0) !== GAME_VERSION) return netDeny(c, 'VERSION MISMATCH \u2014 HOST IS v' + GAME_VERSION);
     if (net.pass && d.pass !== net.pass) return netDeny(c, 'WRONG PASSWORD');
-    if (net.remotes.size >= Math.max(1, (cfg.maxOnline || 8) - 1)) return netDeny(c, 'GAME IS FULL');
+    if (net.remotes.size >= Math.max(1, (cfg.players || 2) - 1)) return netDeny(c, 'GAME IS FULL');
     if (state.phase !== 'playing') return netDeny(c, 'HOST HAS NO ACTIVE MATCH');
     const nm = String(d.name || 'GUEST').slice(0, 12).toUpperCase();
     let team = null;
@@ -2728,6 +2728,8 @@ function hostMsg(c, d){
     }
     const rp = Object.assign(makeSoldierEntity(nm, team ? TEAM_COLOR[team] : 0x6f8fb0, team ? TEAM_TAG[team] : '#9fd0e8'),
       { isRemote:true, id:c.peer, conn:c, kills:0, deaths:0, team, gun:0, regenT:0 });
+    /* a bot yields its slot so total fighter count stays at the slider value */
+    releaseBotForJoiner(team);
     const sp = pickSpawn([state.pos, ...bots.map(b=>b.pos)]);
     rp.pos.set(sp[0], 0, sp[1]); rp.tx = sp[0]; rp.tz = sp[1];
     net.remotes.set(c.peer, rp);
@@ -2757,6 +2759,8 @@ function hostMsg(c, d){
     rp.pos.set(sp[0], 0, sp[1]); rp.tx = sp[0]; rp.ty = 0; rp.tz = sp[1];
     rp.hp = 100; rp.alive = true; rp.regenT = 0;
     rp.mesh.visible = true;
+    rp.mesh.rotation.x = 0; rp.mesh.rotation.z = 0;
+    if (rp.tag) rp.tag.visible = true;
     netSendTo(rp, { t:'youspawn', p:[sp[0], sp[1]], hp:100 });
     updateAlive();
   } else if (d.t === 'take'){
@@ -2801,8 +2805,32 @@ function hostDrop(c){
   scene.remove(rp.mesh);
   feed(rp.name + ' LEFT', false);
   bcast({ t:'feed', x: rp.name + ' LEFT' });
+  /* refill the empty slot with a fresh bot so the lobby stays full */
+  if (state.phase === 'playing' && net.mode === 'host') refillBotSlot(rp.team);
   updateAlive();
   fbTouch();
+}
+/* remove one live bot (preferring the joiner's team for balance) to make room */
+function releaseBotForJoiner(team){
+  let pool = bots.filter(b=>b.alive);
+  if (!pool.length) return;
+  if (team){
+    const same = pool.filter(b=>b.team === team);
+    if (same.length) pool = same;
+  }
+  const victim = pool[Math.floor(Math.random()*pool.length)];
+  victim.alive = false;
+  if (victim.tag) victim.tag.visible = false;
+  if (victim.hpBar) victim.hpBar.visible = false;
+  scene.remove(victim.mesh);
+  const idx = bots.indexOf(victim);
+  if (idx >= 0) bots.splice(idx, 1);
+}
+function refillBotSlot(team){
+  const id = (bots.reduce((m,b)=>Math.max(m,b.id), -1)) + 1;
+  const nb = spawnBot(id, team || null, false);
+  bots.push(nb);
+  bcast({ t:'feed', x: nb.name + ' JOINED THE FIGHT' });
 }
 function netRemoteDie(rp, shooter){
   rp.alive = false;
@@ -2810,7 +2838,9 @@ function netRemoteDie(rp, shooter){
   rp.hpShowT = 0;
   if (rp.hpBar) rp.hpBar.visible = false;
   burst(rp.pos.clone().setY(rp.pos.y + 1.2), 0xd8b08a, 14, 6);
-  rp.mesh.visible = false;
+  if (rp.tag) rp.tag.visible = false;
+  if (rp.hpBar) rp.hpBar.visible = false;
+  dying.push({ mesh:rp.mesh, t:0, dir:(Math.random()<.5?1:-1), axis:Math.random()<.5?'x':'z' });
   const killerName = shooter === 'player' ? playerName() : (shooter ? shooter.name : '???');
   feed(killerName + ' \u25b8 ' + rp.name, shooter === 'player');
   bcast({ t:'feed', x: killerName + ' \u25b8 ' + rp.name });
@@ -2878,7 +2908,12 @@ function netJoin(code, pass){
   net.peer = new Peer();
   net.peer.on('error', e=>{
     if (net.mode !== 'client') return;
-    setJoinStatus(e && e.type === 'peer-unavailable' ? 'ROOM NOT FOUND \u2014 CHECK THE CODE' : ('CONNECTION ERROR: ' + (e && e.type || '?')));
+    const ty = e && e.type;
+    if (ty === 'peer-unavailable'){ setJoinStatus('ROOM NOT FOUND \u2014 CHECK THE CODE'); }
+    else if (ty === 'network' || ty === 'server-error' || ty === 'socket-error' || ty === 'socket-closed'){
+      setJoinStatus('CONNECTION BLOCKED \u2014 TURN OFF AD BLOCKER / BRAVE SHIELDS, THEN RETRY');
+    }
+    else setJoinStatus('CONNECTION ERROR: ' + (ty || '?'));
   });
   net.peer.on('open', id=>{
     if (net.mode !== 'client') return;
@@ -2910,7 +2945,10 @@ function clientMsg(d){
   else if (d.t === 'hitfx'){ hitmarker.classList.remove('show'); void hitmarker.offsetWidth; hitmarker.classList.add('show'); }
   else if (d.t === 'hp'){ const drop = d.v < state.hp; state.hp = d.v; state.regenT = 0; updateHealthHUD(); if (drop) hurtFlash(); }
   else if (d.t === 'got'){
-    tryPickup({ kind:d.k, idx:d.i|0, mag:(d.a != null ? d.a : undefined), noBundle:!!d.b });
+    /* host confirmed. If we already predicted this exact pickup, skip re-adding. */
+    const pending = items.find(x => x._predicted && x.kind === d.k && x.idx === (d.i|0));
+    if (pending){ pending._predicted = false; }
+    else tryPickup({ kind:d.k, idx:d.i|0, mag:(d.a != null ? d.a : undefined), noBundle:!!d.b });
   }
   else if (d.t === 'died') netClientDie(d.by);
   else if (d.t === 'youspawn'){
@@ -2928,6 +2966,12 @@ function netTake(it){
   if ((netTakeReq[it.nid] || 0) > now - 800) return;
   netTakeReq[it.nid] = now;
   if (net.conn && net.conn.open) net.conn.send({ t:'take', n:it.nid });
+  /* optimistic: apply immediately and hide the pickup; a later item snapshot
+     will put it back if the host awarded it to someone else */
+  if (tryPickup({ kind:it.kind, idx:it.idx, mag:it.mag, noBundle:it.noBundle })){
+    it.group.visible = false;
+    it._predicted = true;
+  }
 }
 function canTakeNet(it){
   if (it.kind === 'gun'){
@@ -2954,8 +2998,13 @@ function clientSpawnItem(rec){
 function applyNetItems(list){
   const want = new Map(list.map(r=>[r.n, r]));
   for (let i = items.length - 1; i >= 0; i--){
-    if (!want.has(items[i].nid)){ scene.remove(items[i].group); items.splice(i, 1); }
-    else want.delete(items[i].nid);
+    const it = items[i];
+    if (!want.has(it.nid)){ scene.remove(it.group); items.splice(i, 1); }
+    else {
+      /* still exists on host: if we predicted it away but lost the race, show it again */
+      if (it._predicted){ it.group.visible = true; it._predicted = false; }
+      want.delete(it.nid);
+    }
   }
   for (const rec of want.values()) clientSpawnItem(rec);
 }
@@ -2976,8 +3025,19 @@ function setPuppetVitals(pp, hp, alive){
   pp.hp = hp;
   if (alive !== pp.alive){
     pp.alive = alive;
-    pp.mesh.visible = alive;
-    if (!alive) burst(pp.pos.clone().setY(pp.pos.y + 1.2), 0xd8b08a, 12, 5);
+    if (!alive){
+      burst(pp.pos.clone().setY(pp.pos.y + 1.2), 0xd8b08a, 12, 5);
+      if (pp.tag) pp.tag.visible = false;
+      if (pp.hpBar) pp.hpBar.visible = false;
+      pp.dieDir = (Math.random()<.5?1:-1);
+      pp.dieAxis = Math.random()<.5?'x':'z';
+      pp.dieT = 0;
+    } else {
+      pp.mesh.visible = true;
+      pp.mesh.rotation.x = 0; pp.mesh.rotation.z = 0;
+      pp.dieT = null;
+      if (pp.tag) pp.tag.visible = true;
+    }
   }
 }
 function applySnap(d){
@@ -3127,7 +3187,7 @@ function netTick(dt){
     }
     if (state.phase === 'playing'){
       net.snapT -= dt;
-      if (net.snapT <= 0){ net.snapT = .08; netSnap(); }
+      if (net.snapT <= 0){ net.snapT = .066; netSnap(); }
     }
   } else if (net.mode === 'client'){
     for (const pp of net.puppets.values()){
@@ -3139,12 +3199,18 @@ function netTick(dt){
       while (dy < -Math.PI) dy += Math.PI*2;
       pp.yaw += dy * Math.min(1, dt*12);
       pp.mesh.rotation.y = pp.yaw;
-      puppetAnim(pp, dt, pp.aimT);
+      if (pp.dieT != null && !pp.alive){
+        pp.dieT = Math.min(1, pp.dieT + dt*2.2);
+        pp.mesh.rotation[pp.dieAxis] = pp.dieDir * pp.dieT * Math.PI/2;
+        pp.mesh.visible = pp.dieT < 1;
+      } else {
+        puppetAnim(pp, dt, pp.aimT);
+      }
     }
     if (state.phase === 'playing' && net.conn && net.conn.open){
       net.sendT -= dt;
       if (net.sendT <= 0){
-        net.sendT = .07;
+        net.sendT = .05;
         const moved = Math.hypot(state.pos.x - net._lx, state.pos.z - net._lz) > .1;
         net._lx = state.pos.x; net._lz = state.pos.z;
         net.conn.send({ t:'in', p:[r2n(state.pos.x), r2n(state.pos.y - EYE), r2n(state.pos.z)],
@@ -3187,7 +3253,7 @@ function escS(t){ return String(t).replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt
 function fbLobbyData(){
   const modNames = MODS.list.filter(m=>m.enabled && m.ran).map(m=>((m.meta && m.meta.name) || m.fname)).slice(0, 8);
   return { code:net.code, host:playerName(), map:cfg.map, pass:!!net.pass, mods:modNames,
-    max:cfg.maxOnline || 8, players:1 + net.remotes.size, v:GAME_VERSION,
+    max:cfg.players || 2, players:1 + net.remotes.size, v:GAME_VERSION,
     t:firebase.database.ServerValue.TIMESTAMP };
 }
 function fbPublishLobby(){
@@ -3233,10 +3299,10 @@ function refreshServers(){
     rows.forEach(L=>{
       const row = document.createElement('div');
       row.className = 'srvrow';
-      const full = (L.players || 1) >= (L.max || 8);
+      const full = (L.players || 1) >= (L.max || 2);
       row.innerHTML = '<div class="sname"><div class="stitle">' + escS(L.host || 'HOST') + "'S GAME " + (L.pass ? '\ud83d\udd12' : '') + '</div>' +
-        '<div class="smeta">' + escS(String(L.map || '?').toUpperCase()) + ' \u00b7 ' + (L.players || 1) + '/' + (L.max || 8) +
-        ' PLAYERS \u00b7 ' + ((L.mods && L.mods.length) ? (L.mods.length + ' MOD' + (L.mods.length > 1 ? 'S' : '')) : 'NO MODS') +
+        '<div class="smeta">' + escS(String(L.map || '?').toUpperCase()) + ' \u00b7 ' + (L.players || 1) + '/' + (L.max || 2) +
+        ' \u00b7 ' + ((L.mods && L.mods.length) ? (L.mods.length + ' MOD' + (L.mods.length > 1 ? 'S' : '')) : 'NO MODS') +
         ' \u00b7 v' + (L.v || '?') + '</div></div>';
       const jb = document.createElement('button');
       jb.className = 'srvjoin';
@@ -3523,6 +3589,11 @@ $('btn-mod-paste-install').addEventListener('click', () => {
 loadAllMods();
 modEmit('boot');
 const BG_MODE = new URLSearchParams(location.search).has('bg');
+if (!BG_MODE && !window.Peer){
+  setTimeout(function(){
+    if (!window.Peer) showToast('HEADS UP: the multiplayer library was blocked \u2014 disable your ad blocker / Brave Shields to host or join games');
+  }, 1500);
+}
 buildMap(cfg.map);
 if (BG_MODE) document.body.classList.add('bgmode');
 else showScreen('home');

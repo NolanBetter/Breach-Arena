@@ -95,6 +95,7 @@ window.NGG_FIREBASE = {
   MOD SHARING ISN'T CONNECTED. CHECK THE FIREBASE CONFIG AT THE TOP OF THIS FILE.
 </div>
 
+
 <div class="bar">
   <input class="txt" id="q" placeholder="SEARCH MODS&#8230;" autocomplete="off">
   <select id="f-ver"></select>
@@ -491,8 +492,11 @@ $('p-publish').addEventListener('click', function(){
   if (editMode === 'ver'){
     if (!fileData){ st.className='status err'; st.textContent = 'CHOOSE THE MOD .JS FILE'; return; }
     st.textContent = 'UPLOADING\u2026';
-    db.ref('mods/' + current.id + '/versions').push(versionPayload())
-      .then(function(){ return db.ref('mods/' + current.id).update({ updated: Date.now(), _k: store.k[current.id] }); })
+    const vid = 'v' + Date.now().toString(36);
+    const versions = Object.assign({}, current.versions || {});
+    versions[vid] = versionPayload();
+    /* rewrite the full node (with _k) so the parent-level rule passes */
+    db.ref('mods/' + current.id).update({ versions: versions, updated: Date.now(), _k: store.k[current.id] })
       .then(function(){ $('ov-pub').classList.add('hidden'); load(); })
       .catch(function(e2){ st.className='status err'; st.textContent = 'UPLOAD FAILED: ' + e2.message; });
     return;
@@ -513,10 +517,13 @@ $('p-publish').addEventListener('click', function(){
   st.textContent = 'PUBLISHING\u2026';
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24) + '-' + randKey(4);
   const key = randKey(20);
+  const vid = 'v' + Date.now().toString(36);
+  const versions = {}; versions[vid] = versionPayload();
+  /* write the project AND its first version in ONE set() so the security rule
+     (which re-validates the whole mods/<id> node on any write) sees _k present */
   const proj = { id:id, _k:key, title:title, author:author, short: $('p-short').value.trim(), long: $('p-long').value,
-    icon: iconData || '', created: Date.now(), updated: Date.now(), versions: {} };
+    icon: iconData || '', created: Date.now(), updated: Date.now(), versions: versions };
   db.ref('mods/' + id).set(proj)
-    .then(function(){ return db.ref('mods/' + id + '/versions').push(versionPayload()); })
     .then(function(){
       const k = store.k; k[id] = key; store.k = k;
       $('ov-pub').classList.add('hidden');
