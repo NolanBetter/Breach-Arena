@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>404 — BREACH ARENA</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#14161c; font-family:'Courier New', monospace; }
+  #bg { position:fixed; inset:0; width:100%; height:100%; border:0; pointer-events:none; filter:saturate(.95) blur(1px); }
+  #scrim { position:fixed; inset:0; background:radial-gradient(ellipse at center, rgba(16,18,24,.4) 0%, rgba(12,14,18,.85) 100%); }
+  #wrap { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; }
+  .code { color:#d9a86a; font-size:clamp(64px, 18vw, 150px); letter-spacing:14px; font-weight:700; line-height:1;
+    text-shadow:0 4px 26px rgba(0,0,0,.7); margin-bottom:4px; }
+  .code span { color:#e6e3da; }
+  h1 { color:#e6e3da; font-size:clamp(18px, 4vw, 30px); letter-spacing:7px; font-weight:700; text-align:center;
+    text-shadow:0 2px 14px rgba(0,0,0,.6); }
+  h1 b { color:#d9a86a; font-weight:700; }
+  .tag { color:#8f938f; font-size:11px; letter-spacing:3px; margin:2px 0 22px; text-align:center; line-height:1.7; max-width:420px; }
+  a.btn { display:block; width:min(320px, 80vw); text-align:center; text-decoration:none; font-family:inherit; letter-spacing:3px; cursor:pointer;
+    background:rgba(24,27,34,.8); color:#b9b5aa; border:1px solid rgba(230,227,218,.3); padding:13px 0; font-size:13px;
+    transition:border-color .15s, color .15s, background .15s; backdrop-filter:blur(3px); }
+  a.btn:hover { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.55); }
+  a.btn.big { font-size:18px; padding:18px 0; letter-spacing:5px; color:#f0dfc0; border-color:#d9a86a; background:rgba(50,42,28,.6); }
+  a.btn.big:hover { background:rgba(70,58,38,.7); }
+  .foot { position:fixed; bottom:14px; width:100%; text-align:center; color:#5d6166; font-size:10px; letter-spacing:2px; padding:0 12px; }
+  .missing { color:#6d7178; font-size:10px; letter-spacing:1px; margin-bottom:14px; max-width:80vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .missing b { color:#b0524a; }
+</style>
+</head>
+<body>
+<iframe id="bg" src="/Breach-Arena/play.html?bg=1" title="" tabindex="-1"></iframe>
+<div id="scrim"></div>
+<div id="wrap">
+  <div class="code">4<span>0</span>4</div>
+  <h1>POSITION <b>OUT OF BOUNDS</b></h1>
+  <div class="tag">THIS PAGE ISN'T ON THE MAP. IT MAY HAVE MOVED, RESPAWNED ELSEWHERE, OR NEVER EXISTED.</div>
+  <div class="missing" id="missing"></div>
+  <a class="btn big" href="/Breach-Arena/">RETURN TO BASE</a>
+  <a class="btn" href="/Breach-Arena/play.html">PLAY</a>
+  <a class="btn" href="/Breach-Arena/mods.html">MODS</a>
+  <a class="btn" href="/Breach-Arena/versions.html">VERSIONS</a>
+</div>
+<div class="foot">BREACH ARENA &middot; A NOLAN GRAYSON GAMES PROJECT</div>
+<script>
+  // Show the path the visitor tried to reach (read-only, purely informational)
+  try {
+    var p = location.pathname + location.search;
+    if (p && p !== '/Breach-Arena/404.html'){
+      document.getElementById('missing').innerHTML = 'REQUESTED: <b>' + p.replace(/[<>&"]/g, function(c){
+        return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]);
+      }) + '</b>';
+    }
+  } catch(e){}
+</script>
+</body>
+</html>
