@@ -6,6 +6,7 @@
 <title>Mods — BREACH ARENA</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
    NGG ONLINE SERVICES — Firebase config (same project as play.html)
@@ -83,13 +84,23 @@ window.NGG_FIREBASE = {
   .detect { font-size:9.5px; letter-spacing:1px; color:#7fb069; margin-top:5px; min-height:13px; }
   .hidden { display:none !important; }
   .iconprev { width:96px; height:96px; border:1px solid rgba(230,227,218,.25); background:#20242b; object-fit:cover; display:block; }
+  #btn-signin { border-color:#d9a86a; color:#f0dfc0; }
+  #auth-user b { color:#e6e3da; }
+  .claimbar { max-width:1040px; margin:0 auto 16px; font-size:10.5px; letter-spacing:1px; line-height:1.7; color:#7fb069; border:1px solid rgba(127,176,105,.4); background:rgba(28,44,28,.3); padding:10px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .claimbar button { font-family:inherit; font-size:10px; letter-spacing:1px; padding:7px 12px; background:rgba(50,58,42,.6); color:#a9d99a; border:1px solid #7fb069; cursor:pointer; }
 </style>
 </head>
 <body>
 <div class="head">
   <h1>BREACH<span>ARENA</span> — MODS</h1>
   <a class="back" href="index.html">&larr; BACK TO HOME</a>
+  <div id="authbox" style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+    <span id="auth-user" class="hidden" style="font-size:11px; letter-spacing:1px; color:#9fd0e8;"></span>
+    <button class="btn" id="btn-signin">SIGN IN WITH GOOGLE</button>
+    <button class="btn hidden" id="btn-signout">SIGN OUT</button>
+  </div>
 </div>
+<div id="claimbar" class="claimbar hidden"></div>
 
 <div id="setup" class="banner hidden">
   MOD SHARING ISN'T CONNECTED. CHECK THE FIREBASE CONFIG AT THE TOP OF THIS FILE.
@@ -194,21 +205,79 @@ window.NGG_FIREBASE = {
 const $ = id => document.getElementById(id);
 const escS = t => String(t == null ? '' : t).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 
-const BASE_GAME_VERSIONS = [9, 8];
+const BASE_GAME_VERSIONS = [10, 9, 8];
 const BASE_LOADERS = ['default'];
 
 let db = null;
+let auth = null, authUser = null;
 function initFirebase(){
   if (db) return true;
   try {
     if (window.NGG_FIREBASE && window.NGG_FIREBASE.databaseURL && window.firebase && firebase.database){
       if (!firebase.apps.length) firebase.initializeApp(window.NGG_FIREBASE);
       db = firebase.database();
+      try {
+        auth = firebase.auth();
+        auth.onAuthStateChanged(function(u){
+          authUser = u || null;
+          updateAuthUI();
+          load();
+          if (authUser) offerClaim();
+        });
+      } catch(e){ auth = null; }
       return true;
     }
   } catch(e){ console.warn('[firebase]', e); }
   return false;
 }
+function updateAuthUI(){
+  const inBtn = $('btn-signin'), outBtn = $('btn-signout'), lbl = $('auth-user');
+  if (!inBtn) return;
+  if (authUser){
+    inBtn.classList.add('hidden');
+    outBtn.classList.remove('hidden');
+    lbl.classList.remove('hidden');
+    lbl.innerHTML = 'SIGNED IN AS <b>' + escS(authUser.displayName || authUser.email || 'USER') + '</b>';
+  } else {
+    inBtn.classList.remove('hidden');
+    outBtn.classList.add('hidden');
+    lbl.classList.add('hidden');
+  }
+}
+function doSignIn(){
+  if (!auth){ alert('Sign-in is not available (auth not initialized). On the live site make sure Google sign-in is enabled in Firebase.'); return; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(e){
+    console.warn('[auth]', e);
+    alert('Sign-in failed: ' + (e && e.message || e));
+  });
+}
+function doSignOut(){ if (auth) auth.signOut(); }
+function offerClaim(){
+  const bar = $('claimbar');
+  if (!bar || !authUser) return;
+  const keys = store.k;
+  const ids = Object.keys(keys);
+  if (!ids.length){ bar.classList.add('hidden'); return; }
+  // find local mods that aren't yet owned by this account
+  const toClaim = MODS.filter(function(m){ return keys[m.id] && (!m.owner || m.owner !== authUser.uid); });
+  if (!toClaim.length){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  bar.innerHTML = '<span>YOU HAVE ' + toClaim.length + ' MOD' + (toClaim.length>1?'S':'') +
+    ' PUBLISHED ON THIS BROWSER. CLAIM THEM INTO YOUR ACCOUNT SO YOU CAN EDIT THEM ANYWHERE.</span>';
+  const b = document.createElement('button');
+  b.textContent = 'CLAIM ' + toClaim.length + ' MOD' + (toClaim.length>1?'S':'');
+  b.addEventListener('click', function(){
+    b.disabled = true; b.textContent = 'CLAIMING…';
+    Promise.all(toClaim.map(function(m){
+      // writing owner requires the legacy _k to still match (rules allow it)
+      return db.ref('mods/' + m.id).update({ owner: authUser.uid, _k: store.k[m.id] }).catch(function(e){ console.warn('claim fail', m.id, e); });
+    })).then(function(){ bar.classList.add('hidden'); load(); });
+  });
+  bar.appendChild(b);
+}
+$('btn-signin') && $('btn-signin').addEventListener('click', doSignIn);
+$('btn-signout') && $('btn-signout').addEventListener('click', doSignOut);
 
 const store = {
   get k(){ try { return JSON.parse(localStorage.getItem('ngg_mod_keys') || '{}'); } catch(e){ return {}; } },
@@ -216,6 +285,11 @@ const store = {
   get author(){ try { return localStorage.getItem('ngg_author') || ''; } catch(e){ return ''; } },
   set author(v){ try { localStorage.setItem('ngg_author', v); } catch(e){} },
 };
+function ownsMod(m){
+  if (!m) return false;
+  if (authUser && m.owner && m.owner === authUser.uid) return true;
+  return !!store.k[m.id];   // legacy local-storage ownership (pre-login mods)
+}
 const randKey = n => Array.from({length:n}, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random()*31)]).join('');
 
 function md(src){
@@ -347,7 +421,7 @@ function openDetail(m){
     row.appendChild(dl);
     box.appendChild(row);
   });
-  const mine = !!store.k[m.id];
+  const mine = ownsMod(m);
   $('d-addver').classList.toggle('hidden', !mine);
   $('d-edit').classList.toggle('hidden', !mine);
   $('d-del').classList.toggle('hidden', !mine);
@@ -391,10 +465,11 @@ function resetVersionFields(){
 
 $('btn-add').addEventListener('click', function(){
   if (!db){ alert('Mod sharing is not connected (Firebase config problem).'); return; }
+  if (!authUser){ alert('Please sign in with Google to publish a mod.'); doSignIn(); return; }
   editMode = null; iconData = '';
   $('p-head').textContent = 'PUBLISH A MOD';
   $('p-title').value = ''; $('p-short').value = ''; $('p-long').value = '';
-  $('p-author').value = store.author;
+  $('p-author').value = (authUser && authUser.displayName) || store.author;
   $('p-iconprev').src = ''; $('p-iconprev').style.visibility = 'hidden';
   $('p-mdprev').classList.add('hidden');
   $('p-details').classList.remove('hidden');
@@ -496,7 +571,7 @@ $('p-publish').addEventListener('click', function(){
     const versions = Object.assign({}, current.versions || {});
     versions[vid] = versionPayload();
     /* rewrite the full node (with _k) so the parent-level rule passes */
-    db.ref('mods/' + current.id).update({ versions: versions, updated: Date.now(), _k: store.k[current.id] })
+    db.ref('mods/' + current.id).update({ versions: versions, updated: Date.now(), _k: (store.k[current.id] || current._k || null), owner: (authUser ? authUser.uid : current.owner || null) })
       .then(function(){ $('ov-pub').classList.add('hidden'); load(); })
       .catch(function(e2){ st.className='status err'; st.textContent = 'UPLOAD FAILED: ' + e2.message; });
     return;
@@ -508,11 +583,12 @@ $('p-publish').addEventListener('click', function(){
   if (editMode === 'edit'){
     st.textContent = 'SAVING\u2026';
     db.ref('mods/' + current.id).update({ title:title, author:author, short: $('p-short').value.trim(),
-      long: $('p-long').value, icon: iconData || '', updated: Date.now(), _k: store.k[current.id] })
+      long: $('p-long').value, icon: iconData || '', updated: Date.now(), _k: (store.k[current.id] || current._k || null), owner: (authUser ? authUser.uid : current.owner || null) })
       .then(function(){ $('ov-pub').classList.add('hidden'); load(); })
       .catch(function(e2){ st.className='status err'; st.textContent = 'SAVE FAILED: ' + e2.message; });
     return;
   }
+  if (!authUser){ st.className='status err'; st.textContent = 'SIGN IN TO PUBLISH'; return; }
   if (!fileData){ st.className='status err'; st.textContent = 'CHOOSE THE MOD .JS FILE'; return; }
   st.textContent = 'PUBLISHING\u2026';
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24) + '-' + randKey(4);
@@ -521,7 +597,8 @@ $('p-publish').addEventListener('click', function(){
   const versions = {}; versions[vid] = versionPayload();
   /* write the project AND its first version in ONE set() so the security rule
      (which re-validates the whole mods/<id> node on any write) sees _k present */
-  const proj = { id:id, _k:key, title:title, author:author, short: $('p-short').value.trim(), long: $('p-long').value,
+  const proj = { id:id, _k:key, owner:(authUser ? authUser.uid : null), title:title, author:author,
+    short: $('p-short').value.trim(), long: $('p-long').value,
     icon: iconData || '', created: Date.now(), updated: Date.now(), versions: versions };
   db.ref('mods/' + id).set(proj)
     .then(function(){
@@ -534,7 +611,7 @@ $('p-publish').addEventListener('click', function(){
 
 $('d-del').addEventListener('click', function(){
   if (!current || !confirm('Delete "' + current.title + '" from the mod hub?')) return;
-  db.ref('mods/' + current.id).set({ id: current.id, _k: store.k[current.id], deleted: true, title:'', updated: Date.now() })
+  db.ref('mods/' + current.id).set({ id: current.id, _k: store.k[current.id], owner: (authUser ? authUser.uid : current.owner || null), deleted: true, title:'', updated: Date.now() })
     .then(function(){ $('ov-detail').classList.add('hidden'); load(); });
 });
 
