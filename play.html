@@ -62,13 +62,14 @@
   #ammo.noammo { color:#c96a5a; }
 
   #hotbar { top:52px; left:50%; transform:translateX(-50%); display:flex; gap:6px; pointer-events:auto; z-index:30; }
-  .slot { width:76px; min-height:46px; padding:6px 4px 5px; text-align:center; background:rgba(15,17,22,.6); border:1px solid rgba(230,227,218,.25); color:#b9b5aa; font-family:inherit; font-size:10px; letter-spacing:1px; cursor:pointer; line-height:1.35; }
-  .slot .key { display:block; font-size:9px; opacity:.5; margin-bottom:2px; }
+  .slot { width:64px; min-height:60px; padding:4px 3px 4px; text-align:center; background:rgba(15,17,22,.6); border:1px solid rgba(230,227,218,.25); color:#b9b5aa; font-family:inherit; font-size:9px; letter-spacing:.5px; cursor:pointer; line-height:1.25; position:relative; }
+  .slot .key { position:absolute; top:2px; left:4px; font-size:8px; opacity:.5; }
+  .slot .ico { display:block; width:100%; height:34px; margin:2px 0 1px; }
   .slot.active { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.55); }
   .slot.empty { opacity:.55; }
   .slot .sub { display:block; font-size:9px; opacity:.65; margin-top:2px; }
   body.touch #hotbar { top:50px; gap:5px; }
-  body.touch .slot { width:64px; font-size:9px; padding:7px 2px; }
+  body.touch .slot { width:52px; font-size:8px; padding:5px 1px; }
   body.touch .slot .key { display:none; }
 
   #vignette { inset:0; transition:box-shadow .12s; }
@@ -127,6 +128,11 @@
   .modtgl.on { border-color:#7fb069; color:#a9d99a; }
   .moddel { border-color:rgba(201,106,90,.5); color:#c98a7a; }
   #mods-list { max-height:44vh; overflow-y:auto; }
+  .bindrow { display:flex; align-items:center; gap:8px; padding:7px 10px; margin-bottom:5px; background:rgba(24,27,34,.7); border:1px solid rgba(230,227,218,.18); }
+  .bindrow .bl { flex:1; text-align:left; font-size:11px; letter-spacing:1px; color:#cdc9bf; }
+  .bindrow .bk { min-width:78px; font-family:inherit; font-size:10px; letter-spacing:1px; padding:7px 8px; background:rgba(15,17,22,.7); color:#e6e3da; border:1px solid rgba(230,227,218,.3); cursor:pointer; }
+  .bindrow .bk.listening { border-color:#d9a86a; color:#f0dfc0; background:rgba(50,42,28,.6); }
+  .bindsec { font-size:9px; letter-spacing:2px; color:#8f938f; margin:10px 0 5px; }
   .modtxta { width:100%; height:110px; background:rgba(24,27,34,.8); color:#dcd8cc; border:1px solid rgba(230,227,218,.25); font-family:inherit; font-size:11px; letter-spacing:.5px; padding:8px; box-sizing:border-box; margin:6px 0; resize:vertical; }
   .bgmode .overlay, .bgmode .touch-ui { display:none !important; }
   .srvempty { font-size:10.5px; letter-spacing:1px; color:#8f938f; padding:10px; text-align:center; }
@@ -180,11 +186,13 @@
   <div id="ammo"><span id="ammo-count">15</span><span id="ammo-res"> / ∞</span><small id="ammo-label">P9 SIDEARM</small></div>
 </div>
 <div class="hud" id="hotbar">
-  <button class="slot" data-s="0"><span class="key">1</span><span class="lbl">—</span></button>
-  <button class="slot" data-s="1"><span class="key">2</span><span class="lbl">—</span></button>
-  <button class="slot" data-s="2"><span class="key">3</span><span class="lbl">—</span></button>
-  <button class="slot" data-s="3"><span class="key">4</span><span class="lbl">—</span></button>
-  <button class="slot" data-s="4"><span class="key">5</span><span class="lbl">—</span></button>
+  <button class="slot" data-s="0"><span class="key">1</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="1"><span class="key">2</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="2"><span class="key">3</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="3"><span class="key">4</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="4"><span class="key">5</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="5"><span class="key">6</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
+  <button class="slot" data-s="6"><span class="key">7</span><canvas class="ico" width="72" height="40"></canvas><span class="lbl">—</span></button>
 </div>
 
 <!-- Touch UI -->
@@ -215,6 +223,17 @@
   </div>
   <button class="bigbtn" id="pp-join">JOIN</button>
   <button class="subbtn" id="pp-cancel">BACK</button>
+</div>
+
+<div class="overlay glass hidden" id="teampick" style="z-index:55">
+  <h2>PICK YOUR TEAM</h2>
+  <p class="sub">CHOOSE A SIDE FOR THIS MATCH</p>
+  <div class="panel">
+    <div class="ogbtns" id="tp-btns" style="gap:12px;">
+      <button class="ogbtn" data-team="A" style="border-color:#4f74b0; color:#9fc0e8;">BLUE TEAM</button>
+      <button class="ogbtn" data-team="B" style="border-color:#b0524a; color:#e89f9f;">RED TEAM</button>
+    </div>
+  </div>
 </div>
 
 <div class="overlay glass hidden" id="modsmenu">
@@ -270,6 +289,10 @@
         <button class="ogbtn sel" data-v="on">ON</button>
         <button class="ogbtn" data-v="off">OFF</button>
       </div></div>
+    <div class="og"><div class="oglabel">KEYBINDS <span style="opacity:.6">(KEYBOARD ONLY)</span></div>
+      <div id="binds-list"></div>
+      <button class="subbtn" id="btn-binds-reset" style="margin-top:8px;">RESET TO DEFAULTS</button>
+    </div>
   </div>
   <button class="subbtn" id="btn-options-back">BACK</button>
 </div>
@@ -309,7 +332,7 @@
     <div class="og"><div class="oglabel">PLAYERS</div>
       <div class="rangewrap">
         <input type="range" id="players-slider" min="2" max="20" step="1" value="10">
-        <span class="rangeval" id="players-val">10 (YOU + 9 BOTS)</span>
+        <span class="rangeval" id="players-val">10 MAX PLAYERS</span>
       </div></div>
     <div class="og"><div class="oglabel">MODE</div>
       <div class="ogbtns" id="og-mode">
@@ -370,6 +393,11 @@
   <h1>PAUSED</h1>
   <button class="bigbtn" id="btn-resume">RESUME</button>
   <button class="subbtn" id="btn-quit">QUIT TO MENU</button>
+  <div id="leave-confirm" class="hidden">
+    <div class="oglabel" style="color:#d9a86a; margin:10px 0; line-height:1.6;">LEAVING ENDS THE MATCH FOR EVERYONE. ARE YOU SURE?</div>
+    <button class="bigbtn" id="btn-quit-yes">YES, LEAVE</button>
+    <button class="subbtn" id="btn-quit-no">STAY</button>
+  </div>
 </div>
 
 <div class="overlay glass hidden" id="respawn">
@@ -483,7 +511,7 @@ wireGroup('og-ammo','limitedAmmo', v=>v==='on');
 wireGroup('og-ff','ff', v=>v==='on');
 hookRange($('players-slider'), v => {
   cfg.players = v;
-  $('players-val').textContent = cfg.players + ' (YOU + ' + (cfg.players-1) + ' BOT' + (cfg.players-1===1?'':'S') + ')';
+  $('players-val').textContent = cfg.players + ' MAX PLAYERS';
 });
 
 function refreshCreate(){
@@ -493,7 +521,7 @@ function refreshCreate(){
   $('og-time-wrap').classList.toggle('hidden', lms || cfg.winType!=='time');
   $('og-ff-wrap').classList.toggle('hidden', cfg.mode!=='tdm');
   $('og-ammo-wrap').classList.toggle('hidden', !cfg.pickups);
-  $('players-val').textContent = cfg.players + ' (YOU + ' + (cfg.players-1) + ' BOT' + (cfg.players-1===1?'':'S') + ')';
+  $('players-val').textContent = cfg.players + ' MAX PLAYERS';
   if (cfg.map !== lastBuiltMap){
     buildMap(cfg.map);
     if (state.phase === 'menu') startDemo();   // re-seed the background fight on the new map
@@ -515,7 +543,7 @@ function syncCreateUI(){
 }
 
 /* ================= menu navigation ================= */
-const SCREENS = ['home','nameprompt','options','lobby','joinsoon','create','modsmenu'];
+const SCREENS = ['home','nameprompt','options','lobby','joinsoon','create','modsmenu','teampick'];
 function showScreen(id){
   SCREENS.forEach(s=>$(s).classList.toggle('hidden', s!==id));
   if (id==='home') $('home-greeting').textContent = cfg.name ? ('WELCOME BACK, ' + cfg.name.toUpperCase()) : 'TACTICAL ARENA COMBAT';
@@ -540,7 +568,7 @@ $('btn-join-back').addEventListener('click', ()=>showScreen('lobby'));
 $('btn-create').addEventListener('click', ()=>showScreen('create'));
 $('btn-create-back').addEventListener('click', ()=>showScreen('lobby'));
 $('btn-lobby-back').addEventListener('click', ()=>showScreen('home'));
-$('btn-options').addEventListener('click', ()=>showScreen('options'));
+$('btn-options').addEventListener('click', ()=>{ renderBinds(); showScreen('options'); });
 $('btn-options-back').addEventListener('click', ()=>{
   const v = $('opt-name').value.trim().slice(0,12);
   if (v){ cfg.name = v; store.set('ba_name', cfg.name); }
@@ -809,17 +837,27 @@ function hollowBuilding(cx, cz, W, D, doorZ, matWall){
   /* interior staircase along the west wall */
   const wIn = cx - hw + T;
   const sxC = wIn + 1.2;
-  const steps = 11, rise = F2/steps, runDir = -doorZ;
-  const z0 = cz + doorZ*(hd - T - 1.0);
+  const steps = 14, runDir = -doorZ;
+  const run = 0.42;                 // horizontal depth per step
+  const rise = F2 / steps;          // ~0.27 per step (well under the 0.55 step-up limit)
+  const treadT = 0.16;              // thin tread thickness
+  const z0 = cz + doorZ*(hd - T - 1.1);
   for (let j=1; j<=steps; j++){
-    addBox(sxC, 0, z0 + runDir*(j-1)*.5, 2.3, j*rise, .5, matDarkMetal);
+    const topY = j*rise;            // this tread's walking surface
+    const zc = z0 + runDir*(j-1)*run;
+    /* a thin tread whose TOP sits at topY; sits just under the surface so you
+       step cleanly onto it. A slim riser fills the gap to the tread below. */
+    addBox(sxC, topY - treadT, zc, 2.3, treadT, run + 0.06, matDarkMetal);
+    if (j > 1) addBox(sxC, topY - rise, zc + runDir*(run/2), 2.3, rise - treadT + .02, .06, matDarkMetal);
   }
+  /* solid base under the first few steps so you can't see/fall under the stairs */
+  addBox(sxC, 0, z0 + runDir*(run*1.5), 2.3, rise*2, run*4, matDarkMetal);
   /* upper floor slab with a stairwell opening */
   const slabT = .35, slabY = F2 - slabT;
   const hx1 = wIn + 2.7;
   const inZ0 = cz - hd + T, inZ1 = cz + hd - T;
   addBox((hx1 + (cx + hw - T))/2, slabY, cz, (cx + hw - T) - hx1, slabT, D - 2*T, matWall);
-  const hzA = z0 + runDir*1.8, hzB = z0 + runDir*((steps-1)*.5 + 1.3);
+  const hzA = z0 + runDir*1.4, hzB = z0 + runDir*((steps-1)*run + 1.4);
   const zLo = Math.min(hzA, hzB), zHi = Math.max(hzA, hzB);
   if (zLo - inZ0 > .3) addBox((wIn+hx1)/2, slabY, (inZ0+zLo)/2, 2.7, slabT, zLo - inZ0, matWall);
   if (inZ1 - zHi > .3) addBox((wIn+hx1)/2, slabY, (zHi+inZ1)/2, 2.7, slabT, inZ1 - zHi, matWall);
@@ -842,7 +880,7 @@ function hollowBuilding(cx, cz, W, D, doorZ, matWall){
     [cx, cz + doorZ*(hd + 1.6)],
     [cx, cz + doorZ*(hd - 2.2)],
     [sxC, z0 - runDir*.6],
-    [sxC, z0 + runDir*6.9],
+    [sxC, z0 + runDir*((steps-1)*run + 1.0)],
     [cx + 1.5, cz]
   ]);
   /* ground-floor crate for cover */
@@ -924,6 +962,7 @@ const WEAPONS = [
   { name:'HAVOC SHOTGUN', short:'HAVOC',   dmg:9,   pellets:8, mag:5,  rof:.9,  reload:1.9, spread:.05,  auto:false, adsFov:62, adsSpread:.6,  bundle:3,  ammoName:'SHELLS',      ammoPick:6,  ammoColor:0xb0654a, hs:1.15 },
   { name:'LONGBOW SNIPER',short:'LONGBOW', dmg:60,  pellets:1, mag:4,  rof:1.15,reload:1.9, spread:.035, auto:false, adsFov:20, adsSpread:.06, bundle:2,  ammoName:'SNIPER ROUNDS',ammoPick:4, ammoColor:0x6a8ab0, scoped:true, hs:1.8 },
   { name:'RIPTIDE LMG',   short:'RIPTIDE', dmg:8,   pellets:1, mag:60, rof:.07, reload:2.4, spread:.030, auto:true,  adsFov:55, adsSpread:.5,  bundle:25, ammoName:'LMG BELT',    ammoPick:50, ammoColor:0x6ab077, hs:1.5 },
+  { name:'COMBAT KNIFE',  short:'KNIFE',   dmg:55,  pellets:1, mag:1,  rof:.42, reload:0,   spread:0,    auto:false, adsFov:60, adsSpread:1,   bundle:0,  ammoName:'',            ammoPick:0,  ammoColor:0x888888, hs:1.0, melee:true, range:2.6 },
 ];
 const MEDKITS = [
   { size:'SMALL',  heal:25 },
@@ -934,24 +973,91 @@ const wstate = WEAPONS.map(w => ({ ammo:w.mag, reloading:false, reloadT:0 }));
 let reserves = WEAPONS.map(()=>0);
 
 /* ---------- 5-slot inventory ---------- */
-let inv = [null,null,null,null,null];
+let inv = [null,null,null,null,null,null,null];
 let curSlot = 0;
 const slotEls = [...document.querySelectorAll('.slot')];
 
 function curGunIdx(){ const it = inv[curSlot]; return (it && it.kind==='gun') ? it.w : -1; }
+/* ---- offscreen renderer for hotbar item thumbnails ---- */
+let _thumbRenderer = null, _thumbScene = null, _thumbCam = null;
+const _thumbCache = {};   // key -> dataURL
+function thumbFor(kind, idx){
+  const key = kind + ':' + idx;
+  if (_thumbCache[key]) return _thumbCache[key];
+  try {
+    if (!_thumbRenderer){
+      _thumbRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true });
+      _thumbRenderer.setSize(72, 40);
+      _thumbScene = new THREE.Scene();
+      _thumbScene.add(new THREE.HemisphereLight(0xffffff, 0x30343c, 1.3));
+      const dl = new THREE.DirectionalLight(0xffffff, .7); dl.position.set(1,2,2); _thumbScene.add(dl);
+      _thumbCam = new THREE.PerspectiveCamera(32, 72/40, .1, 20);
+      _thumbCam.position.set(1.15, .75, 1.5);
+      _thumbCam.lookAt(0, -.05, 0);
+    }
+    const model = kind === 'med' ? mkMedkitModel(idx) : mkItemMesh('gun', idx);
+    // normalize scale so each fills the frame
+    model.rotation.set(0, -0.5, kind==='med'?0:0);
+    _thumbScene.add(model);
+    _thumbRenderer.render(_thumbScene, _thumbCam);
+    const url = _thumbRenderer.domElement.toDataURL();
+    _thumbScene.remove(model);
+    _thumbCache[key] = url;
+    return url;
+  } catch(e){ return null; }
+}
+/* small standalone medkit model (also reused for the world pickup) */
+function mkMedkitModel(idx){
+  const g = new THREE.Group();
+  const sc = [.85,1,1.18][idx] || 1;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.4*sc,.28*sc,.32*sc),
+    new THREE.MeshStandardMaterial({ color:0xe4e0d6, roughness:.55 }));
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(.42*sc,.06*sc,.34*sc),
+    new THREE.MeshStandardMaterial({ color:0xc7c3ba, roughness:.5 }));
+  lid.position.y = .16*sc;
+  const cross = new THREE.MeshStandardMaterial({ color:0x3fae5a, roughness:.5 });
+  const cross1 = new THREE.Mesh(new THREE.BoxGeometry(.22*sc,.07*sc,.33*sc), cross);
+  const cross2 = new THREE.Mesh(new THREE.BoxGeometry(.07*sc,.2*sc,.33*sc), cross);
+  cross1.position.z = 0; cross2.position.z = 0;
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(.09*sc,.02*sc,6,12),
+    new THREE.MeshStandardMaterial({ color:0x3a3e46, roughness:.6 }));
+  handle.rotation.x = Math.PI/2; handle.position.y = .2*sc;
+  g.add(body, lid, cross1, cross2, handle);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
 function updateHotbar(){
   slotEls.forEach((el,i)=>{
     const it = inv[i];
     el.classList.toggle('active', i===curSlot);
     el.classList.toggle('empty', !it);
     const lbl = el.querySelector('.lbl');
-    if (!it) lbl.innerHTML = '—';
-    else if (it.kind==='gun'){
-      const sub = cfg.limitedAmmo && cfg.pickups ? '<span class="sub">'+wstate[it.w].ammo+' | '+reserves[it.w]+'</span>' : '';
-      lbl.innerHTML = WEAPONS[it.w].short + sub;
+    const ico = el.querySelector('.ico');
+    if (!it){
+      lbl.innerHTML = '—';
+      if (ico){ const cx = ico.getContext('2d'); cx.clearRect(0,0,ico.width,ico.height); }
+      return;
     }
-    else lbl.innerHTML = 'MEDKIT<span class="sub">+' + MEDKITS[it.m].heal + '</span>';
+    if (it.kind==='gun'){
+      const w = WEAPONS[it.w];
+      const sub = (!w.melee && cfg.limitedAmmo && cfg.pickups) ? '<span class="sub">'+wstate[it.w].ammo+' | '+reserves[it.w]+'</span>' : '';
+      lbl.innerHTML = w.short + sub;
+      drawThumb(ico, 'gun', it.w);
+    } else {
+      lbl.innerHTML = 'MEDKIT<span class="sub">+' + MEDKITS[it.m].heal + '</span>';
+      drawThumb(ico, 'med', it.m);
+    }
   });
+}
+function drawThumb(ico, kind, idx){
+  if (!ico) return;
+  const cx = ico.getContext('2d');
+  cx.clearRect(0,0,ico.width,ico.height);
+  const url = thumbFor(kind, idx);
+  if (!url) return;
+  const img = new Image();
+  img.onload = ()=>{ try { cx.clearRect(0,0,ico.width,ico.height); cx.drawImage(img,0,0,ico.width,ico.height); } catch(e){} };
+  img.src = url;
 }
 function updateAmmoHUD(){
   updateHotbar();
@@ -966,6 +1072,7 @@ function updateAmmoHUD(){
   }
   const w = WEAPONS[gi], ws = wstate[gi];
   ammoLabel.textContent = w.name;
+  if (w.melee){ ammoCount.textContent = '⚔'; ammoRes.textContent = ''; return; }
   if (ws.reloading){ ammoEl.classList.add('reloading'); ammoCount.textContent = '––'; }
   else ammoCount.textContent = ws.ammo;
   if (cfg.limitedAmmo && cfg.pickups){
@@ -987,6 +1094,23 @@ slotEls.forEach(s=>{
   s.addEventListener('click', e => { e.preventDefault(); selectSlot(+s.dataset.s); });
   s.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); selectSlot(+s.dataset.s); }, {passive:false});
 });
+/* cycle to the next/prev NON-EMPTY slot (dir = +1 forward, -1 back) */
+function cycleSlot(dir){
+  if (!playing() || state.dead || state.spectating) return;
+  for (let step=1; step<=inv.length; step++){
+    const i = ((curSlot + dir*step) % inv.length + inv.length) % inv.length;
+    if (inv[i]){ selectSlot(i); return; }
+  }
+}
+/* mouse scroll wheel changes weapons */
+let _wheelAcc = 0;
+addEventListener('wheel', e => {
+  if (!playing() || state.dead || state.spectating) return;
+  _wheelAcc += e.deltaY;
+  if (Math.abs(_wheelAcc) < 30) return;   // debounce trackpad micro-scrolls
+  cycleSlot(_wheelAcc > 0 ? 1 : -1);
+  _wheelAcc = 0;
+}, {passive:true});
 function firstEmptySlot(){ return inv.findIndex(x=>!x); }
 function hasGun(w){ return inv.some(x=>x && x.kind==='gun' && x.w===w); }
 function showToast(msg){
@@ -1113,6 +1237,18 @@ const gunGroups = [];
     g.add(ring, dot);
     vmArms(g, 0,-.13,.15, 0,-.11,-.42);
   }
+  { /* COMBAT KNIFE */
+    const g = mkBase();
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(.03,.14,.5), steel);
+    blade.position.set(0,.02,-.28);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(.07,.18,4), steel);
+    tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.scale.set(.42,1,.14); tip.position.set(0,.02,-.6);
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(.16,.04,.05), darkM); guard.position.set(0,0,-.03);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(.035,.04,.24,8), poly); grip.rotation.x = Math.PI/2; grip.position.set(0,-.01,.12);
+    const pommel = new THREE.Mesh(new THREE.SphereGeometry(.04,8,8), darkM); pommel.position.set(0,-.01,.25);
+    g.add(blade, tip, guard, grip, pommel);
+    vmArms(g, 0,-.04,.14, 0.02,-.03,-.02);
+  }
   gunGroups.forEach(g => g.traverse(o => { if (o.isMesh) o.castShadow = false; }));
 }
 
@@ -1137,11 +1273,37 @@ const state = {
   ads:false, adsLerp:0, fov:75, scopedOn:false,
   recoil:0, bobT:0, shake:0,
   equipT:1, sprintL:0, landT:0, swX:0, swY:0, _pyaw:0, _ppit:0,
-  regenT:0, lastHurtFlash:0,
+  regenT:0, lastHurtFlash:0, meleeT:0,
   matchTime:0,
   teamKills:{A:0,B:0},
 };
 const keys = {};
+
+/* ===== rebindable keybinds ===== */
+const DEFAULT_BINDS = {
+  forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD',
+  jump:'Space', sprint:'ShiftLeft', reload:'KeyR', drop:'KeyG',
+  prevWeapon:'KeyQ', nextWeapon:'KeyE',
+};
+const BIND_LABELS = {
+  forward:'MOVE FORWARD', back:'MOVE BACK', left:'MOVE LEFT', right:'MOVE RIGHT',
+  jump:'JUMP', sprint:'SPRINT', reload:'RELOAD', drop:'DROP WEAPON',
+  prevWeapon:'PREV WEAPON', nextWeapon:'NEXT WEAPON',
+};
+let BINDS = Object.assign({}, DEFAULT_BINDS);
+const MOD_BINDS = {};   // action -> { label, def, fn } registered by mods
+try { const _sb = JSON.parse(store.get('ba_binds') || '{}'); Object.assign(BINDS, _sb); } catch(e){}
+function saveBinds(){ store.set('ba_binds', JSON.stringify(BINDS)); }
+function held(action){ const code = BINDS[action]; return code ? !!keys[code] : false; }
+function keyName(code){
+  if (!code) return '—';
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Arrow')) return code.slice(5).toUpperCase();
+  return ({ Space:'SPACE', ShiftLeft:'L-SHIFT', ShiftRight:'R-SHIFT', ControlLeft:'L-CTRL',
+    ControlRight:'R-CTRL', AltLeft:'L-ALT', AltRight:'R-ALT', Tab:'TAB', Enter:'ENTER',
+    Backquote:'`', Escape:'ESC' }[code]) || code.toUpperCase();
+}
 const EYE=1.7, SPEED=8.2, SPRINT=12, GRAV=26, JUMP=9;
 const playing = () => state.phase==='playing';
 let matchGen = 0;
@@ -1150,9 +1312,12 @@ let matchGen = 0;
 addEventListener('keydown', e => {
   keys[e.code]=true;
   if (!playing()) return;
-  if (e.code==='KeyR') startReload();
-  if (e.code==='KeyG') dropCurrent();
-  for (let i=0;i<5;i++) if (e.code==='Digit'+(i+1)) selectSlot(i);
+  if (e.code===BINDS.reload) startReload();
+  if (e.code===BINDS.drop) dropCurrent();
+  for (let i=0;i<7;i++) if (e.code==='Digit'+(i+1)) selectSlot(i);
+  if (e.code===BINDS.prevWeapon) cycleSlot(-1);
+  if (e.code===BINDS.nextWeapon) cycleSlot(1);
+  for (const act in MOD_BINDS){ if (e.code===BINDS[act]){ try { MOD_BINDS[act].fn(); } catch(err){ console.warn('[mod bind]', err); } } }
 });
 addEventListener('keyup', e => keys[e.code]=false);
 
@@ -1468,8 +1633,9 @@ function spawnBot(i, team, demo){
     strafeDir:Math.random()<.5?-1:1, strafeT:0,
     stuckT:0, lastPos:new THREE.Vector3().copy(mesh.position),
     walkT:Math.random()*10,
-    gun:-1, lootT:Math.random()*.7,
+    gun:(Math.random()<.35 ? KNIFE_IDX : -1), lootT:Math.random()*.7,
     path:null, route:null, deckT:0, hpShowT:0,
+    vy:0, jumpCd:0, fleeT:0, sprintT:0,
   };
   pickWaypoint(b);
   modEmit('botSpawn', b);
@@ -1511,15 +1677,26 @@ function genItemSpots(){
 function mkItemMesh(kind, idx){
   const g = new THREE.Group();
   const dark = new THREE.MeshStandardMaterial({ color:0x2a2e36, roughness:.6, metalness:.5 });
-  if (kind==='gun'){
-    const col = new THREE.MeshStandardMaterial({ color:[0x3c4250,0x4a4238,0x38424a,0x3a4038][idx], roughness:.5, metalness:.4 });
-    const L = [.5,.6,.85,.7][idx];
+  if (kind==='gun' && WEAPONS[idx] && WEAPONS[idx].melee){
+    /* knife: small blade model for the world pickup / hotbar thumbnail */
+    const steelM = new THREE.MeshStandardMaterial({ color:0x363c46, roughness:.3, metalness:.75 });
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(.04,.5,.14), steelM); blade.position.y=.22;
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(.045,.05,.22,8), dark); grip.position.y=-.12;
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.2), dark); guard.position.y=-.02;
+    g.add(blade, grip, guard);
+    g.rotation.z = .5;
+  } else if (kind==='gun'){
+    const palette = [0x3c4250,0x4a4238,0x38424a,0x3a4038];
+    const lens = [.5,.6,.85,.7];
+    const safeIdx = (idx >= 0 && idx < palette.length) ? idx : 0;
+    const col = new THREE.MeshStandardMaterial({ color:palette[safeIdx], roughness:.5, metalness:.4 });
+    const L = lens[safeIdx];
     const body = new THREE.Mesh(new THREE.BoxGeometry(.12,.14,L*.55), col);
     const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.026,.026,L*.42,8), dark);
     barrel.rotation.x = Math.PI/2; barrel.position.set(0,.03,-(L*.45));
     g.add(body, barrel);
-    if (idx===2){ const t = new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,8), dark); t.rotation.x=Math.PI/2; t.position.y=.12; g.add(t); }
-    if (idx===3){ const m = new THREE.Mesh(new THREE.BoxGeometry(.1,.13,.15), dark); m.position.y=-.12; g.add(m); }
+    if (safeIdx===2){ const t = new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,8), dark); t.rotation.x=Math.PI/2; t.position.y=.12; g.add(t); }
+    if (safeIdx===3){ const m = new THREE.Mesh(new THREE.BoxGeometry(.1,.13,.15), dark); m.position.y=-.12; g.add(m); }
     g.rotation.z = .5;
   } else if (kind==='ammo'){
     const w = WEAPONS[idx];
@@ -1527,12 +1704,7 @@ function mkItemMesh(kind, idx){
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(.35,.07,.25), new THREE.MeshStandardMaterial({ color:w.ammoColor, roughness:.5 }));
     g.add(box, stripe);
   } else {
-    const sc = [.8,1,1.2][idx];
-    const box = new THREE.Mesh(new THREE.BoxGeometry(.34*sc,.24*sc,.3*sc), new THREE.MeshStandardMaterial({ color:0xd8d4ca, roughness:.6 }));
-    const red = new THREE.MeshStandardMaterial({ color:0xb0403a, roughness:.5 });
-    const c1 = new THREE.Mesh(new THREE.BoxGeometry(.2*sc,.06*sc,.31*sc), red);
-    const c2 = new THREE.Mesh(new THREE.BoxGeometry(.06*sc,.2*sc,.31*sc), red);
-    g.add(box, c1, c2);
+    return mkMedkitModel(idx);
   }
   g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
   return g;
@@ -1544,9 +1716,10 @@ function itemLabel(kind, idx){
 }
 function randomItemDef(){
   const r = Math.random();
-  if (r < .40) return { kind:'gun', idx: 1 + Math.floor(Math.random()*(WEAPONS.length-1)) };
-  if (r < .75 && cfg.limitedAmmo) return { kind:'ammo', idx: Math.floor(Math.random()*4) };
-  if (r < .75) return { kind:'gun', idx: 1 + Math.floor(Math.random()*(WEAPONS.length-1)) };
+  const gunCount = 4;   // guns are WEAPONS[0..3]; knife (4) is never a world pickup
+  if (r < .58) return { kind:'gun', idx: Math.floor(Math.random()*gunCount) };
+  if (r < .80 && cfg.limitedAmmo) return { kind:'ammo', idx: Math.floor(Math.random()*gunCount) };
+  if (r < .80) return { kind:'gun', idx: Math.floor(Math.random()*gunCount) };
   const mr = Math.random();
   return { kind:'med', idx: mr<.5?0:(mr<.85?1:2) };
 }
@@ -1569,7 +1742,7 @@ function initItems(){
   clearItems();
   if (!cfg.pickups) return;
   genItemSpots();
-  const count = Math.min(itemSpots.length, 8 + Math.floor(cfg.players*0.9));
+  const count = Math.min(itemSpots.length, 14 + Math.floor(cfg.players*1.1));
   for (let i=0;i<count;i++) spawnRandomItem();
 }
 function clearItems(){
@@ -1681,7 +1854,7 @@ function dropLootOnDeath(){
   for (let i=0;i<inv.length;i++){
     const it = inv[i];
     if (!it) continue;
-    if (it.kind==='gun' && it.w===0) continue;
+    if (it.kind==='gun' && WEAPONS[it.w].melee) continue;   // never drop the knife (fallback)
     const a = n*2.4 + Math.random();
     const x = state.pos.x + Math.cos(a)*1.3;
     const z = state.pos.z + Math.sin(a)*1.3;
@@ -1732,7 +1905,7 @@ const playerName = () => (cfg.name || 'YOU').toUpperCase();
 
 /* ================= unified hitscan ================= */
 const _hsDir = new THREE.Vector3();
-function fireHitscan(origin, baseDir, spread, dmg, shooter, hs){
+function fireHitscan(origin, baseDir, spread, dmg, shooter, hs, maxRange){
   _hsDir.copy(baseDir);
   _hsDir.x += (Math.random()*2-1)*spread;
   _hsDir.y += (Math.random()*2-1)*spread;
@@ -1773,7 +1946,7 @@ function fireHitscan(origin, baseDir, spread, dmg, shooter, hs){
   if (victim === 'player'){
     hurtPlayer(dmg, shooter);
     burst(end, 0xc96a5a, 5, 3);
-  } else if (victim){
+  } else if (victim && (!maxRange || bestT <= maxRange)){
     const final = victimHead ? Math.round(dmg * (hs || 1.4)) : dmg;
     burst(end, victimHead ? 0xe8d59a : 0xd8b08a, victimHead ? 8 : 5, victimHead ? 4 : 3);
     victim.hp -= final;
@@ -1837,6 +2010,7 @@ function respawnBot(b){
   b.tag.visible = true;
   b.hp = 100; b.alive = true; b.target = null; b.seeT = 0; b.fireT = 1.2; b.gun = -1;
   b.path = null; b.route = null; b.deckT = 0; b.hpShowT = 0;
+  b.vy = 0; b.jumpCd = 0; b.fleeT = 0; b.sprintT = 0;
   pickWaypoint(b);
   scene.add(b.mesh);
   updateAlive();
@@ -1852,6 +2026,7 @@ function startReload(){
   const gi = curGunIdx();
   if (gi < 0 || !playing() || state.dead) return;
   const ws = wstate[gi], w = WEAPONS[gi];
+  if (w.melee) return;
   if (ws.reloading || ws.ammo === w.mag) return;
   if (cfg.limitedAmmo && cfg.pickups && reserves[gi] <= 0){
     showToast('NO ' + w.ammoName);
@@ -1866,6 +2041,16 @@ function playerShoot(){
   const gi = curGunIdx();
   if (gi < 0) return;
   const w = WEAPONS[gi], ws = wstate[gi];
+  if (w.melee){
+    /* knife: no ammo, short-range lunge, swing animation */
+    state.fireCooldown = w.rof;
+    state.meleeT = 1;
+    camera.getWorldDirection(_pDir);
+    fireHitscan(camera.position.clone(), _pDir, 0, w.dmg, 'player', w.hs, w.range);
+    if (net.mode === 'client') netFlushShot(gi, camera.position);
+    state.firing = false;
+    return;
+  }
   if (ws.reloading) return;
   if (ws.ammo <= 0){ startReload(); return; }
   ws.ammo--;
@@ -1903,11 +2088,11 @@ function hurtPlayer(dmg, shooter){
 }
 function resetLoadout(){
   if (cfg.pickups){
-    inv = [{kind:'gun', w:0}, null, null, null, null];
-    reserves = WEAPONS.map((x,i)=> (i===0 && cfg.limitedAmmo) ? 15 : 0);
+    inv = [{kind:'gun', w:KNIFE_IDX}, null, null, null, null, null, null];
+    reserves = WEAPONS.map(()=> 0);
     wstate.forEach((ws,i)=>{ ws.ammo = WEAPONS[i].mag; ws.reloading=false; });
   } else {
-    inv = [{kind:'gun',w:0},{kind:'gun',w:1},{kind:'gun',w:2},{kind:'gun',w:3},null];
+    inv = [{kind:'gun',w:KNIFE_IDX},{kind:'gun',w:0},{kind:'gun',w:1},{kind:'gun',w:2},{kind:'gun',w:3},null,null];
     reserves = WEAPONS.map(()=>0);
     wstate.forEach((ws,i)=>{ ws.ammo = WEAPONS[i].mag; ws.reloading=false; });
   }
@@ -1983,10 +2168,14 @@ function cycleSpectate(){
 
 /* ================= match flow ================= */
 let demoMode = true;
+let pendingStart = null;   // {host:bool} awaiting a team choice
+let chosenTeam = null;
 function updateMatchInfo(){
   if (cfg.mode==='tdm'){
     teamScoresEl.classList.remove('hidden');
-    teamScoresEl.innerHTML = '<span class="ta">BLUE '+state.teamKills.A+'</span> — <span class="tb">'+state.teamKills.B+' RED</span>';
+    /* clients receive team scores via snapshots; only host/offline compute them here */
+    if (net.mode !== 'client')
+      teamScoresEl.innerHTML = '<span class="ta">BLUE '+state.teamKills.A+'</span> — <span class="tb">'+state.teamKills.B+' RED</span>';
   } else teamScoresEl.classList.add('hidden');
   if (cfg.mode==='lms') matchGoal.textContent = 'LAST ONE STANDING';
   else if (cfg.winType==='score') matchGoal.textContent = 'FIRST TO ' + cfg.scoreLimit;
@@ -2082,6 +2271,12 @@ function clearBots(){
 }
 function startMatch(){
   if (net.mode === 'client'){ toMenu(); return; }
+  /* TDM: choose a side first (offline & host). Re-enters startMatch once picked. */
+  if (cfg.mode === 'tdm' && !chosenTeam){
+    pendingStart = { host: cfg.lobby === 'host' || false };
+    showTeamPick(picked => { chosenTeam = picked; startMatch(); });
+    return;
+  }
   if (!cfg.name) cfg.name = 'ROOKIE';
   store.set('ba_name', cfg.name);
   const { name, ...rest } = cfg;
@@ -2095,14 +2290,21 @@ function startMatch(){
   Object.assign(state, { phase:'playing', dead:false, deathT:0, spectating:false, specIdx:0,
     hp:100, kills:0, deaths:0, yaw:Math.PI, pitch:0, shake:0, firing:false, ads:false, adsLerp:0,
     equipT:0, sprintL:0, landT:0, swX:0, swY:0, _pyaw:Math.PI, _ppit:0,
-    matchTime:cfg.timeLimit, teamKills:{A:0,B:0}, team:'A' });
+    matchTime:cfg.timeLimit, teamKills:{A:0,B:0}, team:(chosenTeam || 'A') });
   exitSpectate();
 
   const nBots = Math.max(1, cfg.players - 1);
   const teams = cfg.mode==='tdm';
-  const aBots = teams ? Math.ceil(cfg.players/2) - 1 : 0;
+  const myTeam = chosenTeam || 'A';
+  /* split the remaining slots so both teams end up as even as possible,
+     accounting for the human already occupying one seat on myTeam */
+  let needA = Math.floor(cfg.players/2), needB = cfg.players - needA;
+  if (myTeam === 'A') needA -= 1; else needB -= 1;
+  const teamSeq = [];
+  for (let k=0;k<needA;k++) teamSeq.push('A');
+  for (let k=0;k<needB;k++) teamSeq.push('B');
   for (let i=0;i<nBots;i++){
-    const team = teams ? (i < aBots ? 'A' : 'B') : null;
+    const team = teams ? (teamSeq[i] || (i%2?'B':'A')) : null;
     bots.push(spawnBot(i, team, false));
   }
   const s = pickSpawn(bots.map(b=>b.pos));
@@ -2125,6 +2327,7 @@ function startMatch(){
 }
 function toMenu(){
   netShutdown(true);
+  chosenTeam = null; pendingStart = null;
   matchGen++;
   state.phase = 'menu';
   state.firing = false; state.ads = false;
@@ -2138,9 +2341,20 @@ function toMenu(){
   if (!IS_TOUCH && document.pointerLockElement) document.exitPointerLock();
   startDemo();
 }
-function pauseGame(){ if (net.mode==='host' || state.phase!=='playing' || (state.dead && !state.spectating)) return; state.phase='paused'; $('paused').classList.remove('hidden'); }
+function pauseGame(){
+  if (state.phase!=='playing' || (state.dead && !state.spectating)) return;
+  if (net.mode){
+    state.netPaused = true;
+    $('paused').classList.remove('hidden');
+    if (document.pointerLockElement) document.exitPointerLock();
+    return;
+  }
+  state.phase='paused';
+  $('paused').classList.remove('hidden');
+}
 function resumeGame(){
   $('paused').classList.add('hidden');
+  state.netPaused = false;
   state.phase='playing';
   if (!IS_TOUCH && !state.dead && !state.spectating) renderer.domElement.requestPointerLock();
 }
@@ -2148,7 +2362,23 @@ $('btn-start').addEventListener('click', startMatch);
 $('btn-again').addEventListener('click', startMatch);
 $('btn-menu').addEventListener('click', toMenu);
 $('btn-resume').addEventListener('click', resumeGame);
-$('btn-quit').addEventListener('click', toMenu);
+$('btn-quit').addEventListener('click', () => {
+  if (net.mode === 'host' && net.remotes.size > 0){
+    $('btn-quit').classList.add('hidden');
+    $('leave-confirm').classList.remove('hidden');
+    return;
+  }
+  toMenu();
+});
+$('btn-quit-no').addEventListener('click', () => {
+  $('leave-confirm').classList.add('hidden');
+  $('btn-quit').classList.remove('hidden');
+});
+$('btn-quit-yes').addEventListener('click', () => {
+  $('leave-confirm').classList.add('hidden');
+  $('btn-quit').classList.remove('hidden');
+  toMenu();
+});
 
 function startDemo(){
   demoMode = true;
@@ -2164,6 +2394,7 @@ const BOT_GUNS = {
   1:    { dmg:5,  cdMin:1.0, cdMax:1.6,  spread:.09,  pellets:5, hs:1.1 },
   2:    { dmg:26, cdMin:1.4, cdMax:2.1,  spread:.02,  pellets:1, hs:1.5 },
   3:    { dmg:5,  cdMin:.17, cdMax:.28,  spread:.06,  pellets:1, hs:1.3 },
+  4:    { dmg:55, cdMin:.55, cdMax:.8,   spread:0,    pellets:1, hs:1.0, melee:true, range:2.6 },
 };
 const _bDir = new THREE.Vector3();
 const _bEye = new THREE.Vector3();
@@ -2209,18 +2440,66 @@ function botThink(b, dt){
   }
   if (b.target) b.seeT += dt; else b.seeT = 0;
 
+  b.jumpCd = Math.max(0, b.jumpCd - dt);
+  b.fleeT = Math.max(0, b.fleeT - dt);
+  const isKnife = b.gun === KNIFE_IDX;
+  const isSniper = b.gun === 2;
+  /* low health: try to break contact and look for a medkit (only if one is in sight) */
+  if (b.target && b.hp < 35 && cfg.pickups && b.fleeT <= 0){
+    let seenMed = null, md = 900;
+    const now = performance.now();
+    for (const it of items){
+      if (it.kind !== 'med' || now < it.lockUntil) continue;
+      const dx = it.group.position.x - b.pos.x, dz = it.group.position.z - b.pos.z;
+      const d2 = dx*dx + dz*dz;
+      if (d2 < md){
+        _tEye.set(it.group.position.x, it.group.position.y + .4, it.group.position.z);
+        if (hasLOS(_bEye, _tEye)){ md = d2; seenMed = it; }
+      }
+    }
+    b.fleeGoal = seenMed ? seenMed.group.position.clone() : null;
+    b.fleeT = 1.2;   // re-evaluate periodically
+  }
+
   let moveDir = null;
-  if (b.target && b.seeT > .25){
+  if (b.target && b.hp < 35 && b.seeT > .2){
+    /* FLEE: move away from the enemy; drift toward a visible medkit if we have one */
+    const tp = b.target === 'player' ? state.pos : b.target.pos;
+    _bDir.subVectors(b.pos, tp); _bDir.y = 0; _bDir.normalize();   // away
+    if (b.fleeGoal){
+      const g2 = new THREE.Vector3(b.fleeGoal.x - b.pos.x, 0, b.fleeGoal.z - b.pos.z).normalize();
+      _bDir.addScaledVector(g2, 1.1).normalize();
+    }
+    moveDir = _bDir.clone();
+    b.mesh.rotation.y = Math.atan2((tp.x - b.pos.x), (tp.z - b.pos.z));
+    b.sprintT = .5;   // sprint away
+  } else if (b.target && b.seeT > .25){
     b.strafeT -= dt;
     if (b.strafeT <= 0){ b.strafeDir *= -1; b.strafeT = .8 + Math.random()*1.4; }
     const tp = b.target === 'player' ? state.pos : b.target.pos;
     _bDir.subVectors(tp, b.pos); _bDir.y = 0; _bDir.normalize();
     const strafe = new THREE.Vector3(-_bDir.z, 0, _bDir.x).multiplyScalar(b.strafeDir);
     const dist = b.pos.distanceTo(tp);
-    if (dist > (b.gun===1 ? 12 : 26)) strafe.addScaledVector(_bDir, .8);
-    else if (dist < 9) strafe.addScaledVector(_bDir, -.7);
-    moveDir = strafe.normalize();
+    if (isKnife){
+      /* charge straight in, no strafing, sprint when far */
+      moveDir = _bDir.clone();
+      if (dist > 6) b.sprintT = .4;
+    } else {
+      const preferred = isKnife ? 2 : (b.gun===1 ? 12 : b.gun===2 ? 30 : 26);
+      if (dist > preferred) { strafe.addScaledVector(_bDir, .85); if (dist > preferred + 8) b.sprintT = .4; }
+      else if (dist < 9) strafe.addScaledVector(_bDir, -.7);
+      moveDir = strafe.normalize();
+    }
     b.mesh.rotation.y = Math.atan2(_bDir.x, _bDir.z);
+    /* snipers on the city map head for a rooftop route when they have one and aren't already up */
+    if (isSniper && BOT_ROUTES.length && b.pos.y < 1 && !b.path && b.deckT <= 0 && Math.random() < dt*0.4){
+      let r = BOT_ROUTES[0], rd = 1e9;
+      for (const rt of BOT_ROUTES){
+        const d = (rt[0][0]-b.pos.x)**2 + (rt[0][1]-b.pos.z)**2;
+        if (d < rd){ rd = d; r = rt; }
+      }
+      b.route = r; b.path = r.map(p2 => p2.slice()); b.wpT = 30;
+    }
   } else {
     if (cfg.pickups && items.length){
       b.lootT -= dt;
@@ -2276,25 +2555,39 @@ function botThink(b, dt){
       }
     }
   }
+  b.sprintT = Math.max(0, b.sprintT - dt);
   if (moveDir){
-    const spd = b.target ? 4.6 : 5.4;
+    const sprinting = b.sprintT > 0;
+    const spd = (b.target ? 4.6 : 5.4) * (sprinting ? 1.5 : 1);
+    const prevX = b.pos.x, prevZ = b.pos.z;
     b.pos.addScaledVector(moveDir, spd*dt);
     const fake = { x:b.pos.x, y:b.pos.y + EYE, z:b.pos.z };
     collideCharacter(fake, .5);
     stepUpAt(fake);
     b.pos.x = fake.x; b.pos.z = fake.z;
     b.pos.y = fake.y - EYE;
-  }
-  /* settle onto whatever floor is underneath (slabs, stairs, ground) */
-  {
-    let gY = 0;
-    for (const o of obstacles){
-      if (b.pos.x > o.min.x - .25 && b.pos.x < o.max.x + .25 &&
-          b.pos.z > o.min.z - .25 && b.pos.z < o.max.z + .25 &&
-          b.pos.y + .1 >= o.max.y - .6 && o.max.y > gY) gY = o.max.y;
+    /* if blocked (barely moved) and on the ground, hop — helps cross ledges & obstacles */
+    const moved2 = (b.pos.x-prevX)**2 + (b.pos.z-prevZ)**2;
+    const onGround = b.vy === 0;
+    if (onGround && b.jumpCd <= 0 && moved2 < (spd*dt*0.4)**2){
+      b.vy = 6.2; b.jumpCd = 1.1;
     }
-    if (b.pos.y > gY + .02) b.pos.y = Math.max(gY, b.pos.y - 12*dt);
-    else b.pos.y = gY;
+  }
+  /* find the floor height under the bot */
+  let gY = 0;
+  for (const o of obstacles){
+    if (b.pos.x > o.min.x - .25 && b.pos.x < o.max.x + .25 &&
+        b.pos.z > o.min.z - .25 && b.pos.z < o.max.z + .25 &&
+        b.pos.y + .1 >= o.max.y - .6 && o.max.y > gY) gY = o.max.y;
+  }
+  /* vertical integration: apply jump velocity + gravity, land on gY */
+  if (b.vy !== 0 || b.pos.y > gY + .02){
+    b.vy -= 17 * dt;
+    b.pos.y += b.vy * dt;
+    if (b.pos.y <= gY){ b.pos.y = gY; b.vy = 0; }
+  } else {
+    b.pos.y = gY;
+    b.vy = 0;
   }
 
   if (cfg.pickups && items.length){
@@ -2353,13 +2646,18 @@ function botThink(b, dt){
   b.fireT -= dt;
   if (b.target && b.seeT > .55 && b.fireT <= 0){
     const gs = BOT_GUNS[b.gun] || BOT_GUNS['-1'];
-    b.fireT = gs.cdMin + Math.random()*(gs.cdMax - gs.cdMin);
-    b.kickT = 1;
     const tp = b.target === 'player' ? state.pos.clone() : b.target.pos.clone().setY(b.target.pos.y + 1.2);
     if (b.target === 'player') tp.y -= .3;
-    _bDir.subVectors(tp, _bEye).normalize();
-    if (hasLOS(_bEye, tp)){
-      for (let i=0;i<gs.pellets;i++) fireHitscan(_bEye.clone(), _bDir, gs.spread, gs.dmg, b, gs.hs);
+    const tdist = b.pos.distanceTo(tp);
+    /* melee (knife) bots must be within range to connect */
+    if (gs.melee && tdist > (gs.range || 2.6)){ /* too far to stab; keep closing */ }
+    else {
+      b.fireT = gs.cdMin + Math.random()*(gs.cdMax - gs.cdMin);
+      b.kickT = 1;
+      _bDir.subVectors(tp, _bEye).normalize();
+      if (hasLOS(_bEye, tp)){
+        for (let i=0;i<gs.pellets;i++) fireHitscan(_bEye.clone(), _bDir, gs.spread, gs.dmg, b, gs.hs, gs.melee ? (gs.range || 2.6) : undefined);
+      }
     }
   }
 }
@@ -2427,21 +2725,21 @@ function animate(){
     }
     else {
       let ix=0, iz=0;
-      if (keys['KeyW']||keys['ArrowUp']) iz-=1;
-      if (keys['KeyS']||keys['ArrowDown']) iz+=1;
-      if (keys['KeyA']||keys['ArrowLeft']) ix-=1;
-      if (keys['KeyD']||keys['ArrowRight']) ix+=1;
+      if (held('forward')||keys['ArrowUp']) iz-=1;
+      if (held('back')||keys['ArrowDown']) iz+=1;
+      if (held('left')||keys['ArrowLeft']) ix-=1;
+      if (held('right')||keys['ArrowRight']) ix+=1;
       if (joy.active){ ix+=joy.x; iz+=joy.y; }
       const len = Math.hypot(ix,iz);
       if (len>1){ ix/=len; iz/=len; }
-      const sprint = keys['ShiftLeft']||keys['ShiftRight'];
+      const sprint = held('sprint')||keys['ShiftRight'];
       let spd = sprint?SPRINT:SPEED;
       spd *= 1 - state.adsLerp*.45;
       const sin=Math.sin(state.yaw), cos=Math.cos(state.yaw);
       const mx = (ix*cos + iz*sin)*spd;
       const mz = (iz*cos - ix*sin)*spd;
 
-      if (keys['Space'] && state.onGround){ state.vel.y=JUMP; state.onGround=false; }
+      if (held('jump') && state.onGround){ state.vel.y=JUMP; state.onGround=false; }
       state.vel.y -= GRAV*dt;
       state.pos.x += mx*dt;
       state.pos.z += mz*dt;
@@ -2520,6 +2818,14 @@ function animate(){
         let rx = state.recoil*.13 + eq*.85 + state.landT*.12 + state.sprintL*.32 + state.swX*.8;
         let ry = state.sprintL*.3 + state.swY*1.1;
         let rz = state.sprintL*.45 - state.swY*.35;
+        state.meleeT = Math.max(0, state.meleeT - dt*4.5);
+        if (WEAPONS[gi].melee && state.meleeT > 0){
+          const sw = Math.sin((1 - state.meleeT) * Math.PI);   // 0->1->0 arc
+          rz += sw * 1.3;                 // slash across
+          rx += sw * .5;
+          g.position.z -= sw * .28;       // thrust forward
+          g.position.x -= sw * .12;
+        }
         const ws = wstate[gi];
         if (ws.reloading){
           const p = Math.min(1, ws.reloadT / w.reload);
@@ -2721,10 +3027,11 @@ function hostMsg(c, d){
     const nm = String(d.name || 'GUEST').slice(0, 12).toUpperCase();
     let team = null;
     if (cfg.mode === 'tdm'){
-      let ta = (state.team === 'A' ? 1 : 0), tb = (state.team === 'B' ? 1 : 0);
-      for (const b of bots) (b.team === 'A' ? ta++ : tb++);
-      for (const r of net.remotes.values()) (r.team === 'A' ? ta++ : tb++);
-      team = ta <= tb ? 'A' : 'B';
+      /* honor the joiner's requested side if they sent one; otherwise auto-balance */
+      const counts = teamCounts();
+      const want = (d.team === 'A' || d.team === 'B') ? d.team : null;
+      if (want && Math.abs((counts[want]+1) - counts[want==='A'?'B':'A']) <= 2) team = want;
+      else team = counts.A <= counts.B ? 'A' : 'B';
     }
     const rp = Object.assign(makeSoldierEntity(nm, team ? TEAM_COLOR[team] : 0x6f8fb0, team ? TEAM_TAG[team] : '#9fd0e8'),
       { isRemote:true, id:c.peer, conn:c, kills:0, deaths:0, team, gun:0, regenT:0 });
@@ -2751,7 +3058,7 @@ function hostMsg(c, d){
     const w = WEAPONS[d.g|0];
     if (!w) return;
     const o = nv3(d.o);
-    (d.d || []).slice(0, 12).forEach(dd => fireHitscan(o.clone(), nv3(dd).normalize(), 0, w.dmg, rp, w.hs));
+    (d.d || []).slice(0, 12).forEach(dd => fireHitscan(o.clone(), nv3(dd).normalize(), 0, w.dmg, rp, w.hs, w.melee ? (w.range || 2.6) : undefined));
   } else if (d.t === 'respawn'){
     if (rp.alive || state.phase !== 'playing') return;
     if (cfg.mode === 'lms') return;
@@ -2811,6 +3118,12 @@ function hostDrop(c){
   fbTouch();
 }
 /* remove one live bot (preferring the joiner's team for balance) to make room */
+function teamCounts(){
+  let A = (state.team === 'A' ? 1 : 0), B = (state.team === 'B' ? 1 : 0);
+  for (const b of bots) if (b.alive) (b.team === 'A' ? A++ : b.team === 'B' ? B++ : 0);
+  for (const r of net.remotes.values()) (r.team === 'A' ? A++ : r.team === 'B' ? B++ : 0);
+  return { A, B };
+}
 function releaseBotForJoiner(team){
   let pool = bots.filter(b=>b.alive);
   if (!pool.length) return;
@@ -2922,7 +3235,7 @@ function netJoin(code, pass){
     const c = net.peer.connect('ba9-' + net.code, { reliable:true });
     net.conn = c;
     net.conns = [c];
-    c.on('open', ()=>{ setJoinStatus('IN ROOM \u2014 WAITING FOR HOST\u2026'); c.send({ t:'hello', name:cfg.name || 'GUEST', pass, ver:GAME_VERSION }); });
+    c.on('open', ()=>{ setJoinStatus('IN ROOM \u2014 WAITING FOR HOST\u2026'); c.send({ t:'hello', name:cfg.name || 'GUEST', pass, ver:GAME_VERSION, team: net._wantTeam || null }); });
     c.on('data', d=>clientMsg(d));
     c.on('close', ()=>netClientLost('HOST DISCONNECTED'));
     c.on('error', ()=>setJoinStatus('COULD NOT REACH THE ROOM'));
@@ -3117,7 +3430,7 @@ function netClientDie(by){
     for (let i2=0;i2<inv.length;i2++){
       const t2 = inv[i2];
       if (!t2) continue;
-      if (t2.kind==='gun' && t2.w===0) continue;
+      if (t2.kind==='gun' && WEAPONS[t2.w].melee) continue;   // keep the knife
       if (t2.kind==='gun') arr.push({ k:'gun', i:t2.w, a:wstate[t2.w].ammo });
       else arr.push({ k:'med', i:t2.m });
       inv[i2] = null;
@@ -3320,8 +3633,7 @@ function refreshServers(){
           $('pp-status').textContent = '';
           $('passprompt').classList.remove('hidden');
         } else {
-          setJoinStatus('CONNECTING TO ' + L.code + '\u2026');
-          netJoin(L.code, '');
+          showTeamPick(t => { net._wantTeam = t; setJoinStatus('CONNECTING TO ' + L.code + '\u2026'); netJoin(L.code, ''); });
         }
       });
       row.appendChild(jb);
@@ -3332,8 +3644,9 @@ function refreshServers(){
 $('pp-cancel').addEventListener('click', ()=>{ $('passprompt').classList.add('hidden'); srvTarget = null; });
 $('pp-join').addEventListener('click', ()=>{
   if (!srvTarget) return;
-  $('pp-status').textContent = 'CHECKING\u2026';
-  netJoin(srvTarget.code, $('pp-pass').value.trim());
+  const code = srvTarget.code, pass = $('pp-pass').value.trim();
+  $('passprompt').classList.add('hidden');
+  showTeamPick(t => { net._wantTeam = t; $('pp-status').textContent = 'CHECKING\u2026'; netJoin(code, pass); });
 });
 
 /* ---------- join screen wiring ---------- */
@@ -3342,11 +3655,14 @@ $('btn-join-go').addEventListener('click', ()=>{
   const code = $('join-code').value.trim().toUpperCase();
   if (code.length < 4){ setJoinStatus('ENTER THE 5-LETTER ROOM CODE'); return; }
   if (!cfg.name) cfg.name = 'GUEST';
-  netJoin(code, $('join-pass').value.trim());
+  /* offer a team pick; the host will balance if a side is overloaded.
+     if the game turns out to be FFA the choice is simply ignored. */
+  showTeamPick(t => { net._wantTeam = t; netJoin(code, $('join-pass').value.trim()); });
 });
 
 /* ================= MOD LOADER (default) ================= */
-const GAME_VERSION = 9;
+const GAME_VERSION = 10;
+const KNIFE_IDX = 4;   // COMBAT KNIFE is WEAPONS[4]
 const LOADER_ID = 'default';
 const LOADER_VERSION = 1;
 
@@ -3396,6 +3712,13 @@ const BA_API = {
   hasMod: id => !!MODS.loaded[id],
   getMod: id => MODS.loaded[id] || null,
   registerWeapon: baRegisterWeapon,
+  /* mods add a rebindable key: BA.registerKeybind('myMod.fire', 'FIRE LASER', 'KeyF', ()=>{...}) */
+  registerKeybind: (action, label, defaultCode, fn) => {
+    if (!action || typeof fn !== 'function') return;
+    MOD_BINDS[action] = { label: label || action.toUpperCase(), def: defaultCode || null, fn };
+    if (!(action in BINDS)) BINDS[action] = defaultCode || null;   // don't clobber a saved rebind
+    return { get key(){ return BINDS[action]; } };
+  },
   registerMap: (id, label, builder) => {
     MAP_BUILDERS[id] = builder;
     const btn = document.createElement('button');
@@ -3552,6 +3875,60 @@ function renderModsList(){
   });
 }
 
+function showTeamPick(cb){
+  teamPickCb = cb;
+  showScreen('teampick');
+}
+let teamPickCb = null;
+document.querySelectorAll('#tp-btns .ogbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const t = btn.dataset.team;
+    const cb = teamPickCb; teamPickCb = null;
+    if (cb) cb(t);
+  });
+});
+let _listeningAction = null;
+function renderBinds(){
+  const box = $('binds-list');
+  if (!box) return;
+  box.innerHTML = '';
+  const addRow = (action, label) => {
+    const row = document.createElement('div');
+    row.className = 'bindrow';
+    row.innerHTML = '<span class="bl">' + label + '</span>';
+    const btn = document.createElement('button');
+    btn.className = 'bk' + (_listeningAction === action ? ' listening' : '');
+    btn.textContent = (_listeningAction === action) ? 'PRESS A KEY…' : keyName(BINDS[action]);
+    btn.addEventListener('click', () => { _listeningAction = (_listeningAction === action) ? null : action; renderBinds(); });
+    row.appendChild(btn);
+    box.appendChild(row);
+  };
+  for (const a in DEFAULT_BINDS) addRow(a, BIND_LABELS[a] || a.toUpperCase());
+  const modActs = Object.keys(MOD_BINDS);
+  if (modActs.length){
+    const sec = document.createElement('div'); sec.className = 'bindsec'; sec.textContent = 'MOD KEYBINDS';
+    box.appendChild(sec);
+    for (const a of modActs) addRow(a, MOD_BINDS[a].label || a.toUpperCase());
+  }
+}
+addEventListener('keydown', e => {
+  if (!_listeningAction) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (e.code !== 'Escape'){
+    const action = _listeningAction;
+    for (const a in BINDS){ if (BINDS[a] === e.code && a !== action) BINDS[a] = null; }
+    BINDS[action] = e.code;
+    saveBinds();
+  }
+  _listeningAction = null;
+  renderBinds();
+}, true);
+$('btn-binds-reset') && $('btn-binds-reset').addEventListener('click', () => {
+  BINDS = Object.assign({}, DEFAULT_BINDS);
+  for (const a in MOD_BINDS) BINDS[a] = MOD_BINDS[a].def;
+  saveBinds();
+  renderBinds();
+});
 $('btn-home-mods').addEventListener('click', () => { renderModsList(); showScreen('modsmenu'); });
 $('btn-mods-back').addEventListener('click', () => showScreen('home'));
 $('btn-mod-reload').addEventListener('click', () => location.reload());
